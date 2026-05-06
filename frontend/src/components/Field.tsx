@@ -1,32 +1,49 @@
-import React from "react";
+type FieldVariant = "light" | "dark";
+type FieldState = "default" | "focus" | "error" | "disabled";
 
 interface FieldProps {
-  label: string;
-  htmlFor: string;
-  error?: string;
-  children: React.ReactNode;
+  label: string
+  hint?: string
+  error?: string
+  variant?: FieldVariant
+  disabled?: boolean
+  placeholder?: string
+  type?: string
+  value?: string
+  onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void
 }
 
-export const Field: React.FC<FieldProps> = ({
+export function Field({
   label,
-  htmlFor,
+  hint,
   error,
-  children,
-}) => {
+  variant = "light",
+  disabled = false,
+  placeholder,
+  type = "text",
+  value,
+  onChange,
+}: FieldProps) {
+  const isError = !!error
+
   return (
-    <div className="flex flex-col gap-2 w-full">
-      <label
-        htmlFor={htmlFor}
-        className="text-sm font-semibold text-gray-700"
-      >
-        {label}
-      </label>
-
-      {children}
-
-      {error && (
-        <span className="text-sm text-red-600 font-medium">{error}</span>
+    <div className={`field field-${variant} ${isError ? "field-error" : ""} ${disabled ? "field-disabled" : ""}`}>
+      <label className="field-label">{label}</label>
+      <input
+        className="field-input"
+        type={type}
+        placeholder={placeholder}
+        value={value}
+        onChange={onChange}
+        disabled={disabled}
+        aria-invalid={isError}
+        aria-describedby={hint || error ? "field-hint" : undefined}
+      />
+      {(error || hint) && (
+        <span className="field-hint" id="field-hint">
+          {error ?? hint}
+        </span>
       )}
     </div>
-  );
-};
+  )
+}

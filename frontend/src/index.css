@@ -4,42 +4,10 @@
   /* Colores */
   --color-primary_y: #DD9A4C;
   --color-primary_yh: #F39007;
+  --color-secondary_g: #6AB23E;
+  --color-danger_r: #D96146;
   --color-blk_1: #2B2B2B;
   --color-blk_2: #3B3B3B;
   --color-secondary_wt: #E3E3E3;
 }
 
-@layer components {
-  .field { @apply flex flex-col gap-1.5 w-full; }
-  .field-label { @apply text-[13px] font-medium leading-snug; }
-  .field-hint  { @apply text-[12px] mt-0.5; }
-  .field-input {
-    @apply w-full h-10 px-3 rounded-lg text-sm outline-none
-           border transition-[border-color,box-shadow] duration-150;
-  }
-
-  /* Light */
-  .field-light .field-label  { @apply text-neutral-900; }
-  .field-light .field-input  { @apply bg-white border-neutral-300 text-neutral-900
-                                      placeholder:text-neutral-400
-                                      focus:border-violet-500 focus:ring-2 focus:ring-violet-500/15; }
-  .field-light .field-hint   { @apply text-neutral-500; }
-
-  /* Dark */
-  .field-dark .field-label   { @apply text-neutral-100; }
-  .field-dark .field-input   { @apply bg-neutral-800 border-neutral-700 text-neutral-100
-                                      placeholder:text-neutral-600
-                                      focus:border-violet-400 focus:ring-2 focus:ring-violet-400/10; }
-  .field-dark .field-hint    { @apply text-neutral-500; }
-
-  /* Error (ambos variantes) */
-  .field-error .field-label  { @apply text-red-700 dark:text-red-400; }
-  .field-error .field-input  { @apply border-red-500 focus:ring-red-500/15; }
-  .field-error .field-hint   { @apply text-red-700 dark:text-red-400; }
-
-  /* Disabled */
-  .field-disabled .field-label { @apply text-neutral-400; }
-  .field-disabled .field-input { @apply bg-neutral-100 dark:bg-neutral-900
-                                         border-neutral-200 dark:border-neutral-800
-                                         text-neutral-400 cursor-not-allowed; }
-}

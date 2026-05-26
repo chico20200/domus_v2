@@ -17,9 +17,9 @@ export function Button({
   const isBlocked = disabled || loading
 
   const variantClasses = {
-    primary: "bg-primary_y hover:bg-blue-600 text-white",
-    secondary: "bg-gray-500 hover:bg-gray-600 text-white",
-    danger: "bg-red-500 hover:bg-red-600 text-white"
+    primary: "bg-primary_y hover:bg-primary_yh text-white",
+    secondary: "bg-secondary_g hover:bg-secondary_gh text-white",
+    danger: "bg-danger_r hover:bg-danger_rh text-white"
   }
 
   const buttonClasses = [

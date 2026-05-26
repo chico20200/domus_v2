@@ -4,6 +4,7 @@ import Login from "./pages/Login"
 import Register from "./pages/Register"
 import RecoveryAccount from "./pages/RecoveryAcount";
 import ProfilePage from "./pages/ProfilePage";
+import RecoveryPassword from "./pages/RecoveryPassword";
 
 function App() {
   // const [count, setCount] = useState(0)
@@ -15,6 +16,7 @@ function App() {
         <Route path="/register" element={<Register />} />
         <Route path="/recovery" element={<RecoveryAccount />} />
         <Route path="/profile" element={<ProfilePage />} />
+        <Route path="/recovery-password" element={<RecoveryPassword />} />
       </Routes>
     </BrowserRouter>
   )

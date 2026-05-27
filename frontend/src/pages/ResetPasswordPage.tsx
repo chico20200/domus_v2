@@ -101,8 +101,13 @@ export default function ResetPasswordPage() {
 
   // ── Formulario ───────────────────────────────────────────────
   return (
-    <div className="min-h-screen bg-bg_base flex items-center justify-center p-6">
-      <div className="w-full max-w-sm flex flex-col gap-5">
+    <div>
+      <div className = "flex flex-row items-center justify-center mt-8">
+            <img src="/logo_domus.png" alt="Logo de la caja" className="w-24"/>
+            <h1 className="text-2xl font-semibold text-text_primary">Domus</h1>
+        </div>
+    <div className="mt-4 bg-bg_base flex items-center justify-center p-6">
+      <div className="bg-secondary_wt w-full max-w-sm flex flex-col gap-5 p-5 rounded-lg shadow-md">
 
         <div>
           <h1 className="text-2xl font-semibold text-text_primary">Nueva contraseña</h1>
@@ -140,6 +145,7 @@ export default function ResetPasswordPage() {
         />
 
       </div>
+    </div>
     </div>
   )
 }

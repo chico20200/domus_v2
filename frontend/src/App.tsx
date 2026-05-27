@@ -1,25 +1,32 @@
+// src/App.tsx
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom"
+import { AuthProvider, useAuth } from "./context/AuthContext"
+import  Login    from "./pages/Login"
+import  ProfilePage  from "./pages/ProfilePage"
 
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Login from "./pages/Login"
-import Register from "./pages/Register"
-import RecoveryAccount from "./pages/RecoveryAcount";
-import ProfilePage from "./pages/ProfilePage";
-import RecoveryPassword from "./pages/RecoveryPassword";
+function ProtectedRoute({ children }: { children: React.ReactNode }) {
+  const { user, isLoading } = useAuth()
 
-function App() {
-  // const [count, setCount] = useState(0)
+  if (isLoading) return <p>Cargando...</p>          // espera la verificación
+  if (!user)     return <Navigate to="/login" replace />   // sin sesión → login
 
-  return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/recovery" element={<RecoveryAccount />} />
-        <Route path="/profile" element={<ProfilePage />} />
-        <Route path="/recovery-password" element={<RecoveryPassword />} />
-      </Routes>
-    </BrowserRouter>
-  )
+  return children
 }
 
-export default App
+export default function App() {
+  return (
+    <AuthProvider>           {/* ← envuelve todo para que useAuth funcione */}
+      <BrowserRouter>
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route path="/perfil" element={
+            <ProtectedRoute>
+              <ProfilePage />
+            </ProtectedRoute>
+          }/>
+          <Route path="/" element={<Navigate to="/perfil" replace />} />
+        </Routes>
+      </BrowserRouter>
+    </AuthProvider>
+  )
+}

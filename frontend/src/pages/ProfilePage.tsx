@@ -2,6 +2,7 @@
 import { useState } from "react"
 import { Field }   from "../components/Field"
 import { Button }  from "../components/Button"
+import { useAuth } from "../context/AuthContext"
 
 interface ProfileData {
   fullName:  string
@@ -16,6 +17,7 @@ export default function ProfilePage() {
   const [isEditing, setIsEditing] = useState(false)
   const [loading, setLoading]     = useState(false)
   const [success, setSuccess]     = useState(false)
+  const { logout } = useAuth()
 
   // Datos guardados — lo que se muestra en modo vista
   // Cuando tengas auth, esto vendrá de tu API/contexto
@@ -110,6 +112,7 @@ export default function ProfilePage() {
 
           <div className="mt-6">
             <Button label="Editar perfil" variant="primary" onClick={handleEdit} />
+            <Button label="Cerrar sesión" variant="danger" onClick={logout} />
           </div>
 
         </div>

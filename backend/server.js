@@ -1,37 +1,25 @@
 const express = require('express');
-const cors = require('cors');
+const cors    = require('cors');
 require('dotenv').config();
 
-//revisar si esta leyendo las claves del .env 
 console.log('SUPABASE_URL:', process.env.SUPABASE_URL);
 console.log('SERVICE_KEY existe:', !!process.env.SUPABASE_SERVICE_KEY);
+console.log('FRONTEND_URL:', process.env.FRONTEND_URL); // ← agrega esto para verificar
 
-const authRoutes = require('./routes/auth.routes');
+const authRoutes    = require('./routes/auth.routes');
+const profileRoutes = require('./routes/profile.routes');
 
 const app = express();
 
+// ── Middlewares ──────────────────────────────
 app.use(cors({
-  origin: process.env.FRONTEND_URL 
+  origin: process.env.FRONTEND_URL
 }));
-
-app.use(cors());
 app.use(express.json());
 
-// Rutas
-app.use('/api/auth', authRoutes);
-
-/*
-app.get('/', (req, res) => {
-  res.json({ message: 'Backend inventario funcionando' });
-});
-
-*/
-
-
-const profileRoutes = require('./routes/profile.routes');
+// ── Rutas ────────────────────────────────────
+app.use('/api/auth',     authRoutes);
 app.use('/api/profiles', profileRoutes);
-
-
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {

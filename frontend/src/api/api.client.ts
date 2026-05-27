@@ -1,6 +1,5 @@
 // src/api/api.client.ts
-
-const BASE_URL = "http://localhost:3000/api"
+const BASE_URL = import.meta.env.VITE_API_URL
 
 // La función central que todos los servicios usan
 async function request<T>(

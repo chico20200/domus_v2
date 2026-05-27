@@ -1,42 +1,72 @@
+import { useState } from "react";
 import { Button } from "../components/Button";
 import { Field } from "../components/Field";
 
 
-export default function Login() {
+export default function Register() {
 
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    console.log("Usuario:", name);
-  };
+    const [name, setName] = useState("")
+    const [email, setEmail] = useState("")
+    const [password, setPassword] = useState("")
+    const [confirmPassword, setConfirmPassword] = useState("")
 
   return (
-    <div className="w-full flex flex-row bg-blk_1">
-        <div className="min-h-screen flex items-center justify-center px-4 w-1/2 ">
-        <form
-            onSubmit={handleSubmit}
-            className="w-full max-w-md bg-blk_2 rounded-2xl p-8 flex flex-col gap-6 shadow-md"
-        >
-            <div className="text-center">
-                <div className="flex m-10" >
-                    <img  src="logo_domus.png" alt="" className="w-25"/>
-                    <h1 className="text-3xl font-bold text-primary_y m-10">DOMUS</h1>
-                </div>
-                <div className="flex justify-between pl-10 pr-10">
-                <Button type="submit">Registrarse</Button>
-                <Button type="submit">Iniciar sesión</Button>
-                </div>
-
-            </div>
-
-            <Field label = "Usuario" variant="dark"/>
-            <Field label = "Contraseña" variant="dark" type="password"/>
-            <Button type="submit">Ingresar</Button>
+    <div className="bg-blk_1 min-h-screen">
+        <div className="flex items-center justify-center ">
+            <img src="/logo_domus.png" alt="Logo de Domus" className="w-32 m-5"/>   
+            <h1 className="text-4xl font-bold text-secondary_wt">Domus</h1>
+        </div>
+        <form className="max-w-md mx-auto mt-5 p-6 bg-blk_2 rounded-lg shadow-lg">
+          <h2 className="text-2xl font-bold mb-6 text-secondary_wt">Crear Cuenta</h2>   
+            <Field
+                label="Nombre completo"
+                hint="Introduce tu nombre completo"
+                placeholder="Juan Pérez"
+                type="text"
+                variant="dark"
+                value={name}
+                onChange={(e) => {setName(e.target.value)}}
+            />
+            <Field
+                label="Correo electrónico"
+                hint="Introduce tu email registrado"
+                placeholder="correo@correo.com"
+                type="email"
+                variant="dark"
+                value={email}
+                onChange={(e) => {setEmail(e.target.value)}}
+            />
+            <Field
+                label="Contraseña"
+                placeholder="•••••••••"
+                hint="Pon tu contraseña segura"
+                type="password"
+                variant="dark"
+                value={password}
+                onChange={(e) => {setPassword(e.target.value)}}
+            />
+            <Field
+                label="Confirmar contraseña"
+                placeholder="•••••••••"
+                hint="Confirma tu contraseña"
+                type="password"
+                variant="dark"
+                value={confirmPassword}
+                onChange={(e) => {setConfirmPassword(e.target.value)}}
+            />
+            <Button
+                label="Registrarse"
+                variant="primary"
+                onClick={() => {
+                    // Aquí iría la lógica de registro
+                    console.log("Name:", name)
+                    console.log("Email:", email)
+                    console.log("Password:", password)
+                    console.log("Confirm Password:", confirmPassword)
+                }}
+            />
         </form>
-        </div>
-        <div className="w-1/2 h-full">   
-            <img className= "h-full object-fit" src="fondo_hex.png" alt="" />
-        </div>
+        <p className="pb-5 text-center text-gray-500 mt-4">¿Ya tienes una cuenta? <a href="/" className="text-secondary_g hover:underline">Inicia sesión</a></p>
     </div>
   );
 }

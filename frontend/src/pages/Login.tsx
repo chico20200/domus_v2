@@ -5,6 +5,7 @@ import { useAuth }       from "../context/AuthContext"
 import { Field }         from "../components/Field"
 import { Button }        from "../components/Button"
 import { Mail, Lock, Forward } from "lucide-react"
+import { Link } from "react-router-dom"
 export default function LoginPage() {
   const { login }    = useAuth()
   const navigate     = useNavigate()
@@ -67,6 +68,11 @@ export default function LoginPage() {
             icon={Lock}
             required
           />
+          <div className="text-right">
+          <Link to="/forgot-password" className="text-xs text-primary_y hover:underline">
+          ¿Olvidaste tu contraseña?
+          </Link>
+</div>
 
           <Button
             label="Ingresar"
@@ -78,6 +84,9 @@ export default function LoginPage() {
 
         </div>
       </div>
+      <p className="text-center text-sm text-text_secondary mt-auto mb-4">
+        No tienes cuenta? <Link to="/register" className="text-secondary_g hover:underline">Regístrate aquí</Link>
+      </p>
      </div>
   )
 }

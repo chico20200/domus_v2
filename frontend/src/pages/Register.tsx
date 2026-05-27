@@ -1,72 +1,137 @@
-import { useState } from "react";
-import { Button } from "../components/Button";
-import { Field } from "../components/Field";
-
+// src/pages/RegisterPage.tsx
+import { useState }    from "react"
+import { useNavigate, Link } from "react-router-dom"
+import { Mail, Lock }  from "lucide-react"
+import { Field }       from "../components/Field"
+import { Button }      from "../components/Button"
+import { useAuth }     from "../context/AuthContext"
+import { authService } from "../api/auth.service"
 
 export default function Register() {
+  const navigate = useNavigate()
+  const { login } = useAuth()
 
-    const [name, setName] = useState("")
-    const [email, setEmail] = useState("")
-    const [password, setPassword] = useState("")
-    const [confirmPassword, setConfirmPassword] = useState("")
+  const [email,    setEmail]    = useState("")
+  const [password, setPassword] = useState("")
+  const [confirm,  setConfirm]  = useState("")
+  const [loading,  setLoading]  = useState(false)
+
+  // Errores por campo — undefined cuando no hay error
+  const [errorEmail,    setErrorEmail]    = useState<string | undefined>(undefined)
+  const [errorPassword, setErrorPassword] = useState<string | undefined>(undefined)
+  const [errorConfirm,  setErrorConfirm]  = useState<string | undefined>(undefined)
+  const [errorGeneral,  setErrorGeneral]  = useState<string | undefined>(undefined)
+
+  // ── Validación local antes de llamar al backend ──────────────
+  function validar(): boolean {
+    let valido = true
+
+    setErrorEmail(undefined)
+    setErrorPassword(undefined)
+    setErrorConfirm(undefined)
+    setErrorGeneral(undefined)
+
+    if (!email.includes("@") || !email.includes(".")) {
+      setErrorEmail("Ingresa un correo válido")
+      valido = false
+    }
+
+    if (password.length < 6) {
+      setErrorPassword("La contraseña debe tener al menos 6 caracteres")
+      valido = false
+    }
+
+    if (password !== confirm) {
+      setErrorConfirm("Las contraseñas no coinciden")
+      valido = false
+    }
+
+    return valido
+  }
+
+  async function handleRegister() {
+    if (!validar()) return   // si hay errores locales no llama al backend
+
+    setLoading(true)
+    try {
+      // 1. Registra el usuario
+      await authService.register({ email, password })
+
+      // 2. Como no requiere confirmación, loguea directo
+      await login(email, password)
+
+      // 3. Redirige al perfil
+      navigate("/perfil", { replace: true })
+
+    } catch (err) {
+      setErrorGeneral(err instanceof Error ? err.message : "Error al crear la cuenta")
+    } finally {
+      setLoading(false)
+    }
+  }
 
   return (
-    <div className="bg-blk_1 min-h-screen">
-        <div className="flex items-center justify-center ">
-            <img src="/logo_domus.png" alt="Logo de Domus" className="w-32 m-5"/>   
-            <h1 className="text-4xl font-bold text-secondary_wt">Domus</h1>
+    <div className="min-h-screen bg-bg_base flex items-center justify-center p-6">
+      <div className="w-full max-w-sm flex flex-col gap-5">
+
+        <div>
+          <h1 className="text-2xl font-semibold text-text_primary">Crear cuenta</h1>
+          <p className="text-sm text-text_secondary mt-1">
+            Ingresa tus datos para registrarte
+          </p>
         </div>
-        <form className="max-w-md mx-auto mt-5 p-6 bg-blk_2 rounded-lg shadow-lg">
-          <h2 className="text-2xl font-bold mb-6 text-secondary_wt">Crear Cuenta</h2>   
-            <Field
-                label="Nombre completo"
-                hint="Introduce tu nombre completo"
-                placeholder="Juan Pérez"
-                type="text"
-                variant="dark"
-                value={name}
-                onChange={(e) => {setName(e.target.value)}}
-            />
-            <Field
-                label="Correo electrónico"
-                hint="Introduce tu email registrado"
-                placeholder="correo@correo.com"
-                type="email"
-                variant="dark"
-                value={email}
-                onChange={(e) => {setEmail(e.target.value)}}
-            />
-            <Field
-                label="Contraseña"
-                placeholder="•••••••••"
-                hint="Pon tu contraseña segura"
-                type="password"
-                variant="dark"
-                value={password}
-                onChange={(e) => {setPassword(e.target.value)}}
-            />
-            <Field
-                label="Confirmar contraseña"
-                placeholder="•••••••••"
-                hint="Confirma tu contraseña"
-                type="password"
-                variant="dark"
-                value={confirmPassword}
-                onChange={(e) => {setConfirmPassword(e.target.value)}}
-            />
-            <Button
-                label="Registrarse"
-                variant="primary"
-                onClick={() => {
-                    // Aquí iría la lógica de registro
-                    console.log("Name:", name)
-                    console.log("Email:", email)
-                    console.log("Password:", password)
-                    console.log("Confirm Password:", confirmPassword)
-                }}
-            />
-        </form>
-        <p className="pb-5 text-center text-gray-500 mt-4">¿Ya tienes una cuenta? <a href="/" className="text-secondary_g hover:underline">Inicia sesión</a></p>
+
+        <Field
+          label="Correo electrónico"
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="ana@cajacomunidad.ec"
+          icon={Mail}
+          required
+          error={errorEmail}
+        />
+        <Field
+          label="Contraseña"
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          placeholder="••••••••"
+          icon={Lock}
+          required
+          hint="Mínimo 6 caracteres"
+          error={errorPassword}
+        />
+        <Field
+          label="Confirmar contraseña"
+          type="password"
+          value={confirm}
+          onChange={(e) => setConfirm(e.target.value)}
+          placeholder="••••••••"
+          icon={Lock}
+          required
+          error={errorConfirm}
+        />
+
+        {errorGeneral && (
+          <p className="text-sm text-danger_r">{errorGeneral}</p>
+        )}
+
+        <Button
+          label="Crear cuenta"
+          variant="primary"
+          loading={loading}
+          onClick={handleRegister}
+        />
+
+        <p className="text-sm text-text_secondary text-center">
+          ¿Ya tienes cuenta?{" "}
+          <Link to="/login" className="text-primary_y hover:underline">
+            Inicia sesión
+          </Link>
+        </p>
+
+      </div>
     </div>
-  );
+  )
 }

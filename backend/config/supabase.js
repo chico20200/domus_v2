@@ -5,7 +5,7 @@ const supabase = createClient(
   process.env.SUPABASE_URL,
   process.env.SUPABASE_SERVICE_KEY
 );
-
+/*
 // Verificar conexión
 const testConnection = async () => {
   try {
@@ -27,6 +27,6 @@ const testConnection = async () => {
   }
 };
 
-testConnection();
+testConnection();*/
 
 module.exports = supabase;

@@ -58,7 +58,7 @@ export function Field({
   const iconClasses = isError ? "text-danger_r" : "text-gray-400"
 
   return (
-    <div className="flex flex-col gap-1 mb-4">
+    <div className="flex flex-col gap-1 mb-1">
 
       {/* Label con asterisco si es requerido */}
       <label className={labelClasses}>

@@ -71,67 +71,73 @@ export default function Register() {
   }
 
   return (
-    <div className="min-h-screen bg-bg_base flex items-center justify-center p-6">
-      <div className="w-full max-w-sm flex flex-col gap-5">
-
-        <div>
-          <h1 className="text-2xl font-semibold text-text_primary">Crear cuenta</h1>
-          <p className="text-sm text-text_secondary mt-1">
-            Ingresa tus datos para registrarte
-          </p>
+    <div>
+        <div className = "flex flex-row items-center justify-center mt-8">
+            <img src="/logo_domus.png" alt="Logo de la caja" className="w-24"/>
+            <h1 className="text-2xl font-semibold text-text_primary">Domus</h1>
         </div>
+        <div className="mt-4 flex items-center justify-center ">
+        <div className="w-full max-w-sm flex flex-col gap-5 bg-secondary_wt p-5 rounded-lg shadow-md">
 
-        <Field
-          label="Correo electrónico"
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          placeholder="ana@cajacomunidad.ec"
-          icon={Mail}
-          required
-          error={errorEmail}
-        />
-        <Field
-          label="Contraseña"
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          placeholder="••••••••"
-          icon={Lock}
-          required
-          hint="Mínimo 6 caracteres"
-          error={errorPassword}
-        />
-        <Field
-          label="Confirmar contraseña"
-          type="password"
-          value={confirm}
-          onChange={(e) => setConfirm(e.target.value)}
-          placeholder="••••••••"
-          icon={Lock}
-          required
-          error={errorConfirm}
-        />
+            <div>
+            <h1 className="text-2xl font-semibold text-text_primary">Crear cuenta</h1>
+            <p className="text-sm text-text_secondary mt-1">
+                Ingresa tus datos para registrarte
+            </p>
+            </div>
 
-        {errorGeneral && (
-          <p className="text-sm text-danger_r">{errorGeneral}</p>
-        )}
+            <Field
+            label="Correo electrónico"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="ana@cajacomunidad.ec"
+            icon={Mail}
+            required
+            error={errorEmail}
+            />
+            <Field
+            label="Contraseña"
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="••••••••"
+            icon={Lock}
+            required
+            hint="Mínimo 6 caracteres"
+            error={errorPassword}
+            />
+            <Field
+            label="Confirmar contraseña"
+            type="password"
+            value={confirm}
+            onChange={(e) => setConfirm(e.target.value)}
+            placeholder="••••••••"
+            icon={Lock}
+            required
+            error={errorConfirm}
+            />
 
-        <Button
-          label="Crear cuenta"
-          variant="primary"
-          loading={loading}
-          onClick={handleRegister}
-        />
+            {errorGeneral && (
+            <p className="text-sm text-danger_r">{errorGeneral}</p>
+            )}
 
-        <p className="text-sm text-text_secondary text-center">
-          ¿Ya tienes cuenta?{" "}
-          <Link to="/login" className="text-primary_y hover:underline">
-            Inicia sesión
-          </Link>
-        </p>
+            <Button
+            label="Crear cuenta"
+            variant="primary"
+            loading={loading}
+            onClick={handleRegister}
+            />
 
-      </div>
+            <p className="text-sm text-text_secondary text-center">
+            ¿Ya tienes cuenta?{" "}
+            <Link to="/login" className="text-primary_y hover:underline">
+                Inicia sesión
+            </Link>
+            </p>
+
+        </div>
+        </div>
     </div>
   )
 }

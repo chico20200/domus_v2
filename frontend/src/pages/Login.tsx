@@ -32,7 +32,7 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen bg-bg_base flex flex-col">
 
-      <div className = "flex flex-row items-center justify-center mt-16">
+      <div className = "flex flex-row items-center justify-center mt-8">
         <img src="/logo_domus.png" alt="Logo de la caja" className="w-24"/>
         <h1 className="text-2xl font-semibold text-text_primary">Domus</h1>
      </div>

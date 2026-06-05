@@ -209,19 +209,3 @@ El sistema maneja tres niveles de acceso:
 El rol se almacena en la tabla `usuarios` y es verificado por Express en cada request mediante middleware, después de validar el JWT.
 
 ---
-
-## Decisiones de diseño
-
-Estas son las decisiones técnicas no triviales tomadas durante el diseño del sistema, con su justificación.
-
-**Saldo calculado, no almacenado.** El saldo de ahorros de cada socio se obtiene siempre por suma del historial de transacciones, nunca como campo en la tabla `socios`. Esto elimina la posibilidad de inconsistencias entre el saldo registrado y las transacciones reales, a costa de una query de agregación en cada consulta. Para el volumen de operaciones de una caja comunitaria, este costo es completamente asumible.
-
-**Tabla de amortización generada al crear el crédito.** Cuando se registra un crédito, el backend calcula y persiste todas las cuotas de la tabla de amortización de forma inmediata. Esto permite al tesorero ver el cronograma completo desde el primer momento, consultar cuotas vencidas sin recalcular, y registrar pagos directamente contra cuotas concretas.
-
-**`socio_id` desnormalizado en `pagos_credito`.** Aunque `socio_id` se puede obtener desde `creditos`, se incluye directamente en `pagos_credito` para simplificar las consultas de pagos por cédula de socio. Evita un join adicional en una de las consultas más frecuentes del sistema.
-
-**Express como única puerta de entrada a Supabase.** El frontend nunca accede a Supabase directamente. Todo pasa por Express, que usa la clave `service_role`. Esto centraliza la lógica de negocio, facilita las validaciones y mantiene la clave de servicio fuera del cliente.
-
-**Búsqueda por cédula como query parameter, no como ruta separada.** En lugar de rutas como `/api/socios/cedula/:cedula`, la búsqueda por cédula se implementa como filtro en `GET /api/socios?cedula=...`. Esto permite combinar filtros de forma flexible (cédula + estado, cédula + rango de fechas) sin multiplicar rutas.
-
-**Soft delete en socios y usuarios.** Los registros nunca se eliminan físicamente. El campo `activo = false` los excluye de las operaciones normales pero preserva el historial completo. Esto es especialmente importante en el contexto de una organización comunitaria donde la trazabilidad es fundamental para la confianza entre miembros.

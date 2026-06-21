@@ -30,6 +30,7 @@ export default function LoginPage() {
   }
 
   return (
+
     <div className="min-h-screen bg-bg_base flex flex-col">
 
       <div className = "flex flex-row items-center justify-center mt-8">

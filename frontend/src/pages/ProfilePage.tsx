@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react"
 import { useAuth }         from "../context/AuthContext"
 import { profileService }  from "../api/profile.service"
+import { AppLayout } from "../components/layaut/AppLayout"
 import { Field }           from "../components/Field"
 import { Button }          from "../components/Button"
 import type { Profile }    from "../api/profile.types"
@@ -9,10 +10,12 @@ import type { Profile }    from "../api/profile.types"
 // ── Componente auxiliar solo lectura ─────────────────────────
 function DataRow({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex flex-col gap-1 border-b border-gray-200 pb-3">
-      <span className="text-xs text-gray-500">{label}</span>
-      <span className="text-sm text-gray-900">{value || "—"}</span>
-    </div>
+    <AppLayout titulo="Mi perfil">
+      <div className="flex flex-col gap-1 border-b border-gray-200 pb-3">
+        <span className="text-xs text-gray-500">{label}</span>
+        <span className="text-sm text-gray-900">{value || "—"}</span>
+      </div>
+    </AppLayout>
   )
 }
 

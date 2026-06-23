@@ -1,3 +1,4 @@
+// backend/routes/auth.routes.js
 const express = require('express');
 const router = express.Router();
 const supabase = require('../config/supabase');
@@ -17,8 +18,9 @@ router.post('/register', async (req, res) => {
     email,password });
 
   if (error) {
-    return res.status(400).json({ error: error.message });
-  }
+  console.log("SUPABASE ERROR FULL:", error);
+  return res.status(400).json({ error: error.message, full: error });
+}
 
   return res.status(201).json({
     message: 'Usuario creado exitosamente',

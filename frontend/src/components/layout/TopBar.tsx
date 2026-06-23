@@ -73,6 +73,7 @@ export function TopBar({ titulo }: TopBarProps) {
             flexShrink:     0,
           }}
           title={user?.email}
+          
         >
           {iniciales}
         </div>

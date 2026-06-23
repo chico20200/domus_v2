@@ -20,7 +20,7 @@ export default function LoginPage() {
     setLoading(true)
     try {
       await login(email, password)
-      navigate("/perfil", { replace: true })  // redirige al perfil
+      navigate("/cajas", { replace: true })  // redirige al perfil
     } catch (err) {
       // El error viene del throw en api.client con el mensaje del backend
       setError(err instanceof Error ? err.message : "Error al iniciar sesión")
@@ -80,6 +80,7 @@ export default function LoginPage() {
             variant="primary"
             loading={loading}
             onClick={handleLogin}
+            onEnter={handleLogin}
             icon={Forward}  
           />
 

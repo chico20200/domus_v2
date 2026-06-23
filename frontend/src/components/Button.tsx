@@ -5,7 +5,8 @@ interface ButtonProps {
   variant?:  ButtonVariant           // opcional — por defecto será "primary"
   disabled?: boolean                 // opcional — por defecto false
   loading?:  boolean                 // opcional — por defecto false
-  onClick?:  () => void              // opcional — lo que pasa al hacer clic
+  onClick?:  () => void    
+  onEnter?:  () => void              // opcional — lo que pasa al presionar Enter
   icon?:     LucideIcon              // opcional — el ícono del botón
 }
 
@@ -15,6 +16,7 @@ export function Button({
   disabled = false,
   loading = false,
   onClick,
+  onEnter,
   icon: Icon
 }: ButtonProps) {
   const isBlocked = disabled || loading
@@ -46,6 +48,7 @@ export function Button({
     <button
       className={buttonClasses}
       onClick={onClick}
+      onKeyPress={(e) => e.key === "Enter" && onEnter?.()}
       disabled={isBlocked}
     >
       {loading && <span>⟳</span>}

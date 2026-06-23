@@ -1,13 +1,18 @@
+// backend/server.js
 const express = require('express');
 const cors    = require('cors');
 require('dotenv').config();
 
 console.log('SUPABASE_URL:', process.env.SUPABASE_URL);
 console.log('SERVICE_KEY existe:', !!process.env.SUPABASE_SERVICE_KEY);
+console.log('ANON_KEY existe:', !!process.env.SUPABASE_ANON_KEY);
 console.log('FRONTEND_URL:', process.env.FRONTEND_URL); // ← agrega esto para verificar
 
 const authRoutes    = require('./routes/auth.routes');
 const profileRoutes = require('./routes/profile.routes');
+const sociosRoutes = require('./routes/socios.routes');
+const cajasRoutes = require('./routes/cajas.routes');
+const ahorrosRoutes = require('./routes/ahorros.routes');
 
 const app = express();
 
@@ -20,8 +25,13 @@ app.use(express.json());
 // ── Rutas ────────────────────────────────────
 app.use('/api/auth',     authRoutes);
 app.use('/api/profiles', profileRoutes);
+app.use('/api/cajas', cajasRoutes);
+app.use('/api/cajas/:cajaId/socios', sociosRoutes);
+app.use('/api/cajas/:cajaId/cuentas', ahorrosRoutes);
+
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Servidor corriendo en http://localhost:${PORT}`);
 });
+

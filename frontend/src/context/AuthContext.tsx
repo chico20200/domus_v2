@@ -3,37 +3,41 @@ import { createContext, useContext, useState, useEffect } from "react"
 import type { AuthUser } from "../api/auth.types"
 import { authService } from "../api/auth.service"
 
-// Define qué expone el contexto
 interface AuthContextType {
-  user:    AuthUser | null   // null = no hay sesión
-  login:   (email: string, password: string) => Promise<void>
-  logout:  () => void
-  isLoading: boolean         // mientras verifica el token inicial
+  user:      AuthUser | null
+  login:     (email: string, password: string) => Promise<void>
+  logout:    () => void
+  isLoading: boolean
 }
 
-// 1. Crea el contexto
 const AuthContext = createContext<AuthContextType | null>(null)
 
-// 2. El Provider — envuelve tu app y comparte el estado
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser]           = useState<AuthUser | null>(null)
+  const [user,      setUser]      = useState<AuthUser | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
-  // Al cargar la app, revisa si ya hay token guardado
   useEffect(() => {
     const token = authService.getToken()
     if (token) {
-      // Reconstruye el usuario mínimo desde el token
-      // Cuando tengas GET /me, aquí harías la llamada para obtener datos completos
       try {
         const payload = JSON.parse(atob(token.split(".")[1]))
-        setUser({
-          id:    payload.sub,
-          email: payload.email,
-          token,
-        })
+
+        // ── Verifica si el token ya expiró ──────────────────
+        // payload.exp es la fecha de expiración en segundos Unix
+        const ahora      = Math.floor(Date.now() / 1000)
+        const expiro     = payload.exp && payload.exp < ahora
+
+        if (expiro) {
+          // Token expirado — limpia y manda al login
+          authService.logout()
+        } else {
+          setUser({
+            id:    payload.sub,
+            email: payload.email,
+            token,
+          })
+        }
       } catch {
-        // Token inválido o expirado — limpia todo
         authService.logout()
       }
     }
@@ -61,11 +65,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   )
 }
 
-// 3. El hook — forma limpia de usar el contexto en cualquier componente
 export function useAuth() {
   const context = useContext(AuthContext)
-  if (!context) {
-    throw new Error("useAuth debe usarse dentro de <AuthProvider>")
-  }
+  if (!context) throw new Error("useAuth debe usarse dentro de <AuthProvider>")
   return context
 }

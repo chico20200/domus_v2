@@ -1,53 +1,61 @@
 // src/pages/ProfilePage.tsx
-import { useState, useEffect } from "react"
-import { useAuth }         from "../context/AuthContext"
-import { profileService }  from "../api/profile.service"
-import { AppLayout } from "../components/layaut/AppLayout"
-import { Field }           from "../components/Field"
-import { Button }          from "../components/Button"
-import type { Profile }    from "../api/profile.types"
+import { useState, useEffect }  from "react"
+import { useAuth }              from "../context/AuthContext"
+import { profileService }       from "../api/profile.service"
+import { AppLayout }            from "../components/layout/AppLayout"
+import { Field }                from "../components/Field"
+import { Button }               from "../components/Button"
+import type { Profile }         from "../api/profile.types"
 
 // ── Componente auxiliar solo lectura ─────────────────────────
+// Sin AppLayout aquí — es solo una fila de datos
 function DataRow({ label, value }: { label: string; value: string }) {
   return (
-    <AppLayout titulo="Mi perfil">
-      <div className="flex flex-col gap-1 border-b border-gray-200 pb-3">
-        <span className="text-xs text-gray-500">{label}</span>
-        <span className="text-sm text-gray-900">{value || "—"}</span>
-      </div>
-    </AppLayout>
+    <div
+      className="flex flex-col gap-1 pb-3"
+      style={{ borderBottom: "1px solid var(--border-base)" }}
+    >
+      <span className="text-xs" style={{ color: "var(--text-secondary)" }}>
+        {label}
+      </span>
+      <span className="text-sm" style={{ color: "var(--text-primary)" }}>
+        {value || "—"}
+      </span>
+    </div>
   )
 }
 
 export default function ProfilePage() {
-  const { user, logout } = useAuth()
+  const { user, logout, isLoading: authLoading } = useAuth()
 
-  // ── Estado ───────────────────────────────────────────────────
-  const [profile,    setProfile]    = useState<Profile | null>(null)
-  const [draft,      setDraft]      = useState<Profile | null>(null)
-  const [isEditing,  setIsEditing]  = useState(false)
-  const [loading,    setLoading]    = useState(true)   // carga inicial
-  const [saving,     setSaving]     = useState(false)  // guardando cambios
-  const [error,      setError]      = useState("")
-  const [success,    setSuccess]    = useState(false)
+  const [profile,   setProfile]   = useState<Profile | null>(null)
+  const [draft,     setDraft]     = useState<Profile | null>(null)
+  const [isEditing, setIsEditing] = useState(false)
+  const [loading,   setLoading]   = useState(false)
+  const [saving,    setSaving]    = useState(false)
+  const [error,     setError]     = useState("")
+  const [success,   setSuccess]   = useState(false)
 
-  // ── Carga inicial del perfil ─────────────────────────────────
-  useEffect(() => {
-    async function cargarPerfil() {
-      try {
-        const response = await profileService.getMe()
-        setProfile(response.profile)
-        setDraft(response.profile)
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Error al cargar el perfil")
-      } finally {
-        setLoading(false)
-      }
+  
+
+// El useEffect depende de user, no solo del montaje
+useEffect(() => {
+  if (!user) return  // espera a que AuthContext tenga el usuario
+
+  async function cargarPerfil() {
+    try {
+      const response = await profileService.getMe()
+      setProfile(response.profile)
+      setDraft(response.profile)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Error al cargar el perfil")
+    } finally {
+      setLoading(false)
     }
-    cargarPerfil()
-  }, []) // ← solo al montar el componente
+  }
+  cargarPerfil()
+}, [user]) 
 
-  // ── Handlers ────────────────────────────────────────────────
   function handleChange(field: keyof Profile) {
     return (e: React.ChangeEvent<HTMLInputElement>) => {
       setDraft(prev => prev ? { ...prev, [field]: e.target.value } : prev)
@@ -76,7 +84,7 @@ export default function ProfilePage() {
         telefono: draft.telefono,
         foto_url: draft.foto_url,
       })
-      setProfile(response.profile)  // actualiza los datos guardados
+      setProfile(response.profile)
       setIsEditing(false)
       setSuccess(true)
     } catch (err) {
@@ -86,31 +94,16 @@ export default function ProfilePage() {
     }
   }
 
-  // ── Iniciales para el avatar ─────────────────────────────────
   const initials = profile?.nombre
     ? profile.nombre.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase()
     : user?.email?.[0].toUpperCase() ?? "?"
 
-  // ── Estados de carga y error ─────────────────────────────────
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-bg_base flex items-center justify-center">
-        <p className="text-text_secondary text-sm">Cargando perfil...</p>
-      </div>
-    )
-  }
-
-  if (error && !profile) {
-    return (
-      <div className="min-h-screen bg-bg_base flex items-center justify-center">
-        <p className="text-danger_r text-sm">{error}</p>
-      </div>
-    )
-  }
-
-  // ── Avatar — igual en ambos modos ────────────────────────────
+  // ── Avatar ───────────────────────────────────────────────────
   const Avatar = (
-    <div className="w-20 h-20 rounded-full bg-primary_y flex items-center justify-center text-white text-2xl font-bold shrink-0">
+    <div
+      className="w-20 h-20 rounded-full flex items-center justify-center text-white text-2xl font-bold shrink-0"
+      style={{ background: "var(--color-primary_y)" }}
+    >
       {profile?.foto_url
         ? <img src={profile.foto_url} className="w-full h-full rounded-full object-cover" alt="foto de perfil" />
         : initials
@@ -118,61 +111,123 @@ export default function ProfilePage() {
     </div>
   )
 
+  // ── Carga inicial ────────────────────────────────────────────
+ if (authLoading || loading) {
+  return (
+    <AppLayout titulo="Mi perfil">
+      <div className="flex items-center justify-center h-full">
+        <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
+          Cargando perfil...
+        </p>
+      </div>
+    </AppLayout>
+  )
+}
+
+  // ── Error sin perfil ─────────────────────────────────────────
+  if (error && !profile) {
+    return (
+      <AppLayout titulo="Mi perfil">
+        <div className="flex items-center justify-center h-full">
+          <p className="text-sm" style={{ color: "var(--color-danger_r)" }}>
+            {error}
+          </p>
+        </div>
+      </AppLayout>
+    )
+  }
+
   // ── MODO VISTA ───────────────────────────────────────────────
   if (!isEditing) {
     return (
-      <div className="min-h-screen bg-bg_base p-6">
-        <div className="max-w-xl mx-auto">
+      <AppLayout titulo="Mi perfil">
+        <div className="max-w-xl">
 
-          <div className="mb-8">
-            <h1 className="text-2xl font-semibold text-text_primary">Mi perfil</h1>
-            <p className="text-sm text-text_secondary mt-1">Tu información en la caja</p>
-          </div>
-
-          <div className="flex items-center gap-4 mb-8">
+          {/* Cabecera con avatar */}
+          <div
+            className="flex items-center gap-4 p-5 rounded-xl mb-6"
+            style={{
+              background: "var(--bg-surface)",
+              border:     "1px solid var(--border-base)",
+            }}
+          >
             {Avatar}
             <div>
-              <p className="text-lg font-semibold text-text_primary">
+              <p className="text-lg font-semibold" style={{ color: "var(--text-primary)" }}>
                 {profile?.nombre || "Sin nombre"}
               </p>
-              <p className="text-sm text-text_secondary">{user?.email}</p>
+              <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
+                {user?.email}
+              </p>
             </div>
           </div>
 
-          <div className="flex flex-col gap-4">
+          {/* Datos */}
+          <div
+            className="rounded-xl p-5 flex flex-col gap-4 mb-6"
+            style={{
+              background: "var(--bg-surface)",
+              border:     "1px solid var(--border-base)",
+            }}
+          >
             <DataRow label="Correo electrónico" value={user?.email ?? ""} />
             <DataRow label="Teléfono"           value={profile?.telefono ?? ""} />
           </div>
 
           {success && (
-            <p className="text-sm text-secondary_g mt-4">✓ Perfil actualizado correctamente</p>
+            <p
+              className="text-sm mb-4"
+              style={{ color: "var(--color-secondary_g)" }}
+            >
+              ✓ Perfil actualizado correctamente
+            </p>
           )}
 
-          <div className="flex gap-3 mt-6">
-            <Button label="Editar perfil"   variant="primary"   onClick={handleEdit} />
-            <Button label="Cerrar sesión"   variant="danger"    onClick={logout} />
+          <div className="flex gap-3">
+            <Button label="Editar perfil" variant="primary" onClick={handleEdit} />
+            <Button label="Cerrar sesión" variant="danger"  onClick={logout}     />
           </div>
 
         </div>
-      </div>
+      </AppLayout>
     )
   }
 
   // ── MODO EDICIÓN ─────────────────────────────────────────────
   return (
-    <div className="min-h-screen bg-bg_base p-6">
-      <div className="max-w-xl mx-auto">
+    <AppLayout titulo="Editar perfil">
+      <div className="max-w-xl">
 
-        <div className="mb-8">
-          <h1 className="text-2xl font-semibold text-text_primary">Editar perfil</h1>
-          <p className="text-sm text-text_secondary mt-1">Actualiza tu información personal</p>
-        </div>
-
-        <div className="flex items-center gap-4 mb-8">
+        {/* Avatar */}
+        <div
+          className="flex items-center gap-4 p-5 rounded-xl mb-6"
+          style={{
+            background: "var(--bg-surface)",
+            border:     "1px solid var(--border-base)",
+          }}
+        >
           {Avatar}
+          <div>
+            <p className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>
+              Foto de perfil
+            </p>
+            <button
+              className="text-xs hover:underline"
+              style={{ color: "var(--color-primary_y)" }}
+            >
+              Cambiar foto
+            </button>
+          </div>
         </div>
 
-        <div className="flex flex-col gap-4">
+        {/* Formulario */}
+        <div
+          className="rounded-xl p-5 flex flex-col gap-4 mb-6"
+          style={{
+            background: "var(--bg-surface)",
+            border:     "1px solid var(--border-base)",
+          }}
+        >
           <Field
             label="Nombre completo"
             type="text"
@@ -190,14 +245,21 @@ export default function ProfilePage() {
           />
         </div>
 
-        {error && <p className="text-sm text-danger_r mt-2">{error}</p>}
+        {error && (
+          <p
+            className="text-sm mb-4"
+            style={{ color: "var(--color-danger_r)" }}
+          >
+            {error}
+          </p>
+        )}
 
-        <div className="flex gap-3 mt-6">
-          <Button label="Guardar cambios" variant="primary"   loading={saving}  onClick={handleSave}   />
-          <Button label="Cancelar"        variant="secondary"                   onClick={handleCancel} />
+        <div className="flex gap-3">
+          <Button label="Guardar cambios" variant="primary"   loading={saving} onClick={handleSave}   />
+          <Button label="Cancelar"        variant="secondary"                  onClick={handleCancel} />
         </div>
 
       </div>
-    </div>
+    </AppLayout>
   )
 }

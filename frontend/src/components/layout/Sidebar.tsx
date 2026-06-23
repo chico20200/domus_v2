@@ -1,4 +1,5 @@
 // src/components/layout/Sidebar.tsx
+import { useCaja } from "../../context/CajaContext"
 import { NavLink } from "react-router-dom"
 import {
   LayoutDashboard, Users, PiggyBank,
@@ -6,6 +7,8 @@ import {
   Settings, ChevronLeft, ChevronRight,
   Building2
 } from "lucide-react"
+
+import { useNavigate } from "react-router-dom"
 
 interface SidebarProps {
   abierto:   boolean
@@ -24,6 +27,8 @@ const navItems = [
 ]
 
 export function Sidebar({ abierto, onToggle }: SidebarProps) {
+  const { cajaActiva, salirDeCaja } = useCaja();
+
   return (
     <aside
       style={{
@@ -73,8 +78,10 @@ export function Sidebar({ abierto, onToggle }: SidebarProps) {
               overflow:    "hidden",
               textOverflow:"ellipsis",
             }}
+            
           >
             Mi caja
+            {cajaActiva?.nombre ?? "Sin caja"}
           </span>
         )}
       </div>
@@ -151,6 +158,9 @@ export function Sidebar({ abierto, onToggle }: SidebarProps) {
             ? <ChevronLeft  size={16} />
             : <ChevronRight size={16} />
           }
+        </button>
+        <button onClick={() => { salirDeCaja(); useNavigate()("/cajas") }}> 
+          Cambiar caja
         </button>
       </div>
     </aside>

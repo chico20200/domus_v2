@@ -1,7 +1,7 @@
 // src/pages/SociosPage.tsx
 import { useState, useEffect }   from "react"
 import { useNavigate }           from "react-router-dom"
-import { UserPlus, Search, Eye, Pencil, UserX, Phone, Mail, IdCard } from "lucide-react"
+import { UserPlus, Search, Pencil, UserX, Phone, Mail, IdCard } from "lucide-react"
 import { AppLayout }             from "../components/layout/AppLayout"
 import { Button }                from "../components/Button"
 import { Field }                 from "../components/Field"

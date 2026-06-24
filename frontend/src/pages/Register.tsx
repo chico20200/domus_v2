@@ -71,18 +71,18 @@ export default function Register() {
   }
 
   return (
-    <div>
+    <div className="min-h-screen flex flex-col" style={{ background: 'var(--bg-base)' }}>
         <div className = "flex flex-row items-center justify-center mt-8">
             <img src="/logo_domus.png" alt="Logo de la caja" className="w-24"/>
-            <h1 className="text-2xl font-semibold text-text_primary">Domus</h1>
+            <h1 className="text-2xl font-semibold" style={{ color: 'var(--text-primary)' }}>Domus</h1>
         </div>
         <div className="mt-4 flex items-center justify-center ">
-        <div className="w-full max-w-sm flex flex-col gap-5 bg-secondary_wt p-5 rounded-lg shadow-md">
+        <div className="w-full max-w-sm flex flex-col gap-5 p-5 rounded-lg shadow-md" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-base)' }}>
 
             <div>
-            <h1 className="text-2xl font-semibold text-text_primary">Crear cuenta</h1>
-            <p className="text-sm text-text_secondary mt-1">
-                Ingresa tus datos para registrarte
+            <h1 className="text-2xl font-semibold" style={{ color: 'var(--text-primary)' }}>Crear cuenta</h1>
+            <p className="text-sm mt-1" style={{ color: 'var(--text-secondary)' }}>
+              Ingresa tus datos para registrarte
             </p>
             </div>
 
@@ -119,7 +119,7 @@ export default function Register() {
             />
 
             {errorGeneral && (
-            <p className="text-sm text-danger_r">{errorGeneral}</p>
+            <p className="text-sm" style={{ color: 'var(--color-danger_r)' }}>{errorGeneral}</p>
             )}
 
             <Button
@@ -129,10 +129,10 @@ export default function Register() {
             onClick={handleRegister}
             />
 
-            <p className="text-sm text-text_secondary text-center">
+            <p className="text-sm text-center" style={{ color: 'var(--text-secondary)' }}>
             ¿Ya tienes cuenta?{" "}
-            <Link to="/login" className="text-primary_y hover:underline">
-                Inicia sesión
+            <Link to="/login" className="hover:underline" style={{ color: 'var(--color-primary_y)' }}>
+              Inicia sesión
             </Link>
             </p>
 

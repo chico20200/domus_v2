@@ -201,7 +201,7 @@ export default function CreditosPage() {
 
         {modal === 'detalle' && creditoActivo && (
           <div className="fixed inset-0 flex items-center justify-center z-50" style={{ background: 'rgba(0,0,0,0.4)' }}>
-            <div className="rounded-xl p-5 w-96" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-base)' }}>
+            <div className="rounded-xl p-5 w-96 shadow-lg" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-base)' }}>
               <button className="mb-3 text-sm" onClick={() => setModal(null)}><ChevronLeft size={14} /> Volver</button>
               <h3 className="text-sm font-medium">Detalle de crédito</h3>
               <p className="text-sm">Monto total: {creditoActivo.monto_total} · Cuota: {creditoActivo.cuota_mensual}</p>
@@ -221,10 +221,12 @@ export default function CreditosPage() {
               {esTesorero && creditoActivo.estado === 'activo' && (
                 <div className="mt-3">
                   <h4 className="text-sm font-medium">Registrar pago</h4>
-                  <Field label="Monto" type="number" value={pagoMonto} onChange={e => setPagoMonto(e.target.value)} />
-                  <div className="flex gap-2 mt-2">
-                    <Button label="Registrar pago" variant="primary" onClick={handlePago} />
-                    <Button label="Cerrar" variant="secondary" onClick={() => setModal(null)} />
+                  <div className="mt-2 p-3 rounded-lg" style={{ background: 'var(--bg-surface-2)', border: '1px solid var(--border-base)' }}>
+                    <Field label="Monto" type="number" value={pagoMonto} onChange={e => setPagoMonto(e.target.value)} />
+                    <div className="flex gap-2 mt-2">
+                      <Button label="Registrar pago" variant="primary" onClick={handlePago} />
+                      <Button label="Cerrar" variant="secondary" onClick={() => setModal(null)} />
+                    </div>
                   </div>
                 </div>
               )}

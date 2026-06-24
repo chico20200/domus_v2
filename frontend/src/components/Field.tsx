@@ -1,4 +1,5 @@
 import type { LucideIcon } from "lucide-react"
+import { useTheme } from "../context/ThemeContext"
 
 type fieldMode   = "dark" | "light"
 type fieldStatus = "able" | "disabled"
@@ -21,7 +22,7 @@ export function Field({
   label,
   hint,
   error,
-  variant  = "light",
+  variant,
   status   = "able",
   placeholder,
   type     = "text",
@@ -31,6 +32,10 @@ export function Field({
   required = false,
 }: FieldProps) {
 
+  const { isDark } = useTheme()
+
+  const effectiveVariant = variant ?? (isDark ? "dark" : "light")
+
   const isDisabled = status === "disabled"
   const isError    = !!error
 
@@ -38,7 +43,7 @@ export function Field({
     // cuando hay ícono agrega padding derecho extra para que el texto no tape el ícono
     Icon ? "pr-10" : "",
     "w-full rounded-lg pl-3 py-2 text-sm outline-none transition-colors border",
-    variant === "light"
+    effectiveVariant === "light"
       ? "bg-white text-gray-900"
       : "bg-blk_2 text-gray-100",
     isError
@@ -51,7 +56,7 @@ export function Field({
 
   const labelClasses = [
     "text-sm font-medium mt-1",
-    variant === "light" ? "text-blk_1" : "text-secondary_wt"
+    effectiveVariant === "light" ? "text-blk_1" : "text-secondary_wt"
   ].join(" ")
 
   // Color del ícono — rojo si hay error, gris si no

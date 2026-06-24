@@ -1,7 +1,7 @@
 // src/pages/CreditosPage.tsx
 import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
-import { Plus, CheckCircle, CreditCard, DollarSign, ChevronLeft } from "lucide-react"
+import { Plus, CheckCircle, CreditCard, ChevronLeft } from "lucide-react"
 import { AppLayout } from "../components/layout/AppLayout"
 import { Button } from "../components/Button"
 import { Field } from "../components/Field"

@@ -24,17 +24,7 @@ export interface Credito {
   }
 }
 
-export interface PagoCredito {
-  id:             string
-  credito_id:     string
-  caja_id:        string
-  socio_id:       string
-  monto:          number
-  descripcion:    string
-  registrado_por: string
-  created_at?:    string
-  updated_at?:    string
-}
+import type { PagoCredito } from './pagos.types'
 
 // Responses
 export interface GetCreditosResponse { creditos: Credito[] }

@@ -5,6 +5,9 @@ export interface PagoCredito {
   credito_id: string
   numero_cuota: number
   monto_pagado: number
+  // Campos legacy - algunos endpoints anteriores usan `monto` y `descripcion`
+  monto?: number
+  descripcion?: string
   saldo_antes: number
   saldo_despues: number
   fecha_pago: string

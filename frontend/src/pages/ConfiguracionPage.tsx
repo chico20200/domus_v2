@@ -235,7 +235,7 @@ export default function ConfiguracionPage() {
           {!loading && miembros.map(m => {
             const config  = rolConfig[m.rol]
             const RolIcon = config.icon
-            const esSelf  = false // puedes comparar con user.id del AuthContext si lo necesitas
+            // const esSelf  = false // puedes comparar con user.id del AuthContext si lo necesitas
 
             return (
               <div

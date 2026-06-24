@@ -2,6 +2,7 @@
 import { Sun, Moon, Bell, LogOut } from "lucide-react"
 import { useTheme } from "../../context/ThemeContext"
 import { useAuth }  from "../../context/AuthContext"
+import { useNavigate } from 'react-router-dom'
 
 interface TopBarProps {
   titulo: string
@@ -10,6 +11,7 @@ interface TopBarProps {
 export function TopBar({ titulo }: TopBarProps) {
   const { isDark, toggleTheme } = useTheme()
   const { user, logout }        = useAuth()
+  const navigate = useNavigate()
 
   // Iniciales del usuario para el avatar
   const iniciales = user?.email?.[0].toUpperCase() ?? "U"
@@ -57,26 +59,29 @@ export function TopBar({ titulo }: TopBarProps) {
           <Bell size={16} />
         </button>
 
-        {/* Avatar */}
-        <div
-          style={{
-            width:          "32px",
-            height:         "32px",
-            borderRadius:   "50%",
-            background:     "var(--color-primary_y)",
-            display:        "flex",
-            alignItems:     "center",
-            justifyContent: "center",
-            fontSize:       "13px",
-            fontWeight:     500,
-            color:          "white",
-            flexShrink:     0,
-          }}
-          title={user?.email}
-          
-        >
-          {iniciales}
-        </div>
+          {/* Avatar: clic para ir a perfil */}
+          <button
+            onClick={() => navigate('/perfil')}
+            title={user?.email}
+            aria-label="Ir al perfil"
+            style={{
+              width:          "32px",
+              height:         "32px",
+              borderRadius:   "50%",
+              background:     "var(--color-primary_y)",
+              display:        "flex",
+              alignItems:     "center",
+              justifyContent: "center",
+              fontSize:       "13px",
+              fontWeight:     500,
+              color:          "white",
+              flexShrink:     0,
+              border:         "none",
+              cursor:         "pointer",
+            }}
+          >
+            {iniciales}
+          </button>
 
         {/* Cerrar sesión */}
         <button

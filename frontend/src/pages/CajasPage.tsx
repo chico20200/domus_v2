@@ -7,6 +7,7 @@ import { useCaja }             from "../context/CajaContext"
 import { Button }              from "../components/Button"
 import { Field }               from "../components/Field"
 import type { MiCaja }         from "../api/cajas.types"
+import { apiClient } from "../api/api.client"
 
 // Ícono y color según el rol
 const rolConfig = {
@@ -26,7 +27,10 @@ export default function CajasPage() {
   const [nombre,      setNombre]      = useState("")
   const [descripcion, setDescripcion] = useState("")
   const [error,       setError]       = useState<string | undefined>(undefined)
-  
+  const [codigo,      setCodigo]      = useState("")
+  const [uniendose,   setUniendose]   = useState(false)
+  const [showUnirse,  setShowUnirse]  = useState(false)
+  const [errorUnirse, setErrorUnirse] = useState<string | undefined>(undefined)
 
   useEffect(() => {
     async function cargar() {
@@ -46,6 +50,42 @@ export default function CajasPage() {
     setCajaActiva(caja)
     navigate("/dashboard")
   }
+
+ async function handleUnirse() {
+  if (!codigo.trim()) {
+    setErrorUnirse("Ingresa el código de invitación")
+    return
+  }
+  setUniendose(true)
+  setErrorUnirse(undefined)
+  try {
+    const res = await apiClient.post<{
+      message:       string
+      socioVinculado: boolean
+      caja: { id: string; nombre: string; descripcion?: string; rol: "admin" | "tesorero" | "socio" }
+    }>("/cajas/unirse", { codigo })
+
+    const caja = {
+      id:          res.caja.id,
+      nombre:      res.caja.nombre,
+      descripcion: res.caja.descripcion ?? "",
+      rol:         res.caja.rol,
+    }
+
+    setCajaActiva(caja)
+
+    // Mensaje personalizado si se vinculó a un socio existente
+    if (res.socioVinculado) {
+      console.log("Tu cuenta fue vinculada a tu registro de socio en esta caja")
+    }
+
+    navigate("/dashboard")
+  } catch (err) {
+    setErrorUnirse(err instanceof Error ? err.message : "Código inválido")
+  } finally {
+    setUniendose(false)
+  }
+}
 
   async function handleCrear() {
     if (!nombre.trim()) {
@@ -266,7 +306,57 @@ export default function CajasPage() {
             </div>
           </div>
         )}
+{!showForm && !showUnirse && (
 
+  <button
+    className="text-sm hover:underline mr-2"
+    style={{ color: "var(--text-secondary)" }}
+    onClick={() => setShowUnirse(true)}
+  >
+    ¿Tienes un código de invitación? Únete aquí
+  </button>
+)}
+
+  {showUnirse && (
+    <div
+      className="rounded-xl p-5"
+      style={{
+        background: "var(--bg-surface)",
+        border:     "1px solid var(--border-base)",
+      }}
+    >
+      <h3 className="text-sm font-medium mb-4"
+        style={{ color: "var(--text-primary)" }}>
+        Unirse a una caja
+      </h3>
+      <Field
+        label="Código de invitación"
+        type="text"
+        value={codigo}
+        onChange={e => setCodigo(e.target.value.toUpperCase())}
+        placeholder="Ej: AXBK73P2"
+        error={errorUnirse}
+        required
+      />
+      <div className="flex gap-3 mt-4">
+        <Button
+          label="Unirse"
+          variant="primary"
+          loading={uniendose}
+          onClick={handleUnirse}
+        />
+        <Button
+          label="Cancelar"
+          variant="secondary"
+          onClick={() => {
+            setShowUnirse(false)
+            setCodigo("")
+            setErrorUnirse(undefined)
+          }}
+        />
+      </div>
+    </div>
+  )}
         {/* Botón crear nueva caja */}
         {!showForm && (
           <Button

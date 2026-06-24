@@ -5,6 +5,7 @@ import {
   ArrowDownCircle, ArrowUpCircle,
   PiggyBank, ChevronRight, ChevronLeft, Plus
 } from "lucide-react"
+
 import { AppLayout }                  from "../components/layout/AppLayout"
 import { Button }                     from "../components/Button"
 import { Field }                      from "../components/Field"
@@ -13,6 +14,8 @@ import { ahorrosService }             from "../api/ahorros.service"
 import { sociosService }              from "../api/socios.service"
 import type { CuentaAhorro, Transaccion } from "../api/ahorros.types"
 import type { Socio }                 from "../api/socios.types"
+import { useAuth } from "../context/AuthContext"
+
 
 function formatMonto(m: number) {
   return new Intl.NumberFormat("es-EC", {
@@ -32,6 +35,7 @@ type ModalTipo = "deposito" | "retiro" | "nueva" | null
 export default function AhorrosPage() {
   const navigate       = useNavigate()
   const { cajaActiva } = useCaja()
+  const { user }       = useAuth()
 
   // ── Estado principal ─────────────────────────────────────────
   const [vista,         setVista]         = useState<Vista>("lista")
@@ -52,21 +56,44 @@ export default function AhorrosPage() {
   useEffect(() => {
     if (!cajaActiva) { navigate("/cajas", { replace: true }); return }
     cargarDatos()
+    
   }, [cajaActiva])
 
   async function cargarDatos() {
-    setLoading(true)
-    try {
+  setLoading(true)
+  try {
+    const esSocio = cajaActiva?.rol === "socio"
+
+    if (esSocio) {
+      // El socio solo ve sus propias cuentas
+      const resSocios = await sociosService.getSocios(cajaActiva!.id)
+
+      // Busca el socio asociado al user actual.
+      // Si el socio fue invitado y aún no tiene user_id, usamos el email.
+      const miSocio = resSocios.socios.find(s =>
+        s.user_id === user?.id ||
+        (user?.email && s.email?.toLowerCase() === user.email.toLowerCase())
+      )
+
+      if (miSocio) {
+        const resCuentas = await ahorrosService.getCuentasSocio(cajaActiva!.id, miSocio.id)
+        setCuentas(resCuentas.cuentas)
+      } else {
+        setCuentas([])
+      }
+    } else {
+      // Tesorero y admin ven todas las cuentas
       const [resCuentas, resSocios] = await Promise.all([
         ahorrosService.getCuentas(cajaActiva!.id),
         sociosService.getSocios(cajaActiva!.id),
       ])
       setCuentas(resCuentas.cuentas)
       setSocios(resSocios.socios.filter(s => s.activo))
-    } finally {
-      setLoading(false)
     }
+  } finally {
+    setLoading(false)
   }
+}
 
   async function verDetalle(cuenta: CuentaAhorro) {
     setCuentaActiva(cuenta)
@@ -320,7 +347,13 @@ export default function AhorrosPage() {
           )}
 
           {!loading && cuentas.map(cuenta => {
+            const esSocio = cajaActiva?.rol === "socio"
             const socio = cuenta.socios
+            const avatarText = esSocio
+              ? cuenta.numero_cuenta.slice(0, 2)
+              : socio
+                ? `${socio.nombre[0]}${socio.apellido[0]}`
+                : "?"
             return (
               <button
                 key={cuenta.id}
@@ -332,14 +365,14 @@ export default function AhorrosPage() {
                   className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 text-sm font-medium"
                   style={{ background: "rgba(221,154,76,0.12)", color: "var(--color-primary_y)" }}
                 >
-                  {socio ? `${socio.nombre[0]}${socio.apellido[0]}` : "?"}
+                  {avatarText}
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>
-                    {socio ? `${socio.nombre} ${socio.apellido}` : "Sin socio"}
+                    {esSocio ? cuenta.numero_cuenta : socio ? `${socio.nombre} ${socio.apellido}` : "Sin socio"}
                   </p>
                   <p className="text-xs" style={{ color: "var(--text-secondary)" }}>
-                    {cuenta.numero_cuenta} · {cuenta.estado}
+                    {esSocio ? cuenta.estado : `${cuenta.numero_cuenta} · ${cuenta.estado}`}
                   </p>
                 </div>
                 <div className="text-right flex-shrink-0">

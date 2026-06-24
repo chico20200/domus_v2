@@ -5,6 +5,7 @@ const supabase   = require('../config/supabaseAdmin');
 const supabaseAdmin = require('../config/supabaseAdmin');  
 const verifyToken = require('../middlewares/auth.middleware');
 
+
 router.use(verifyToken);
 
 // ─────────────────────────────────────────────
@@ -331,6 +332,109 @@ router.get('/:cajaId/resumen', async (req, res) => {
       saldoPendiente:  saldoPendiente,
     },
     transaccionesRecientes: transacciones ?? [],
+  });
+});
+
+// POST /api/cajas/unirse
+// El usuario ingresa un código y se une a la caja
+router.post('/unirse', async (req, res) => {
+  const userId     = req.user.id;
+  const { codigo } = req.body;
+
+  if (!codigo) return res.status(400).json({ error: 'El código es requerido' });
+
+  // 1. Busca la invitación activa y válida
+  const { data: invitacion } = await supabaseAdmin
+    .from('invitaciones_caja')
+    .select('*, cajas(nombre)')
+    .eq('codigo', codigo.toUpperCase().trim())
+    .eq('activo', true)
+    .is('usado_por', null)
+    .gt('expira_at', new Date().toISOString())
+    .single();
+
+  if (!invitacion) {
+    return res.status(404).json({ error: 'Código inválido o expirado' });
+  }
+
+  // 2. Verifica que no sea ya miembro
+  const { data: yaEsMiembro } = await supabaseAdmin
+    .from('miembros_caja')
+    .select('id')
+    .eq('caja_id', invitacion.caja_id)
+    .eq('user_id', userId)
+    .single();
+
+  if (yaEsMiembro) {
+    return res.status(400).json({ error: 'Ya perteneces a esta caja' });
+  }
+
+  // 3. Agrega como miembro de la caja
+  const { error: errorMiembro } = await supabaseAdmin
+    .from('miembros_caja')
+    .insert({
+      caja_id: invitacion.caja_id,
+      user_id: userId,
+      rol:     invitacion.rol,
+    });
+
+  if (errorMiembro) {
+    return res.status(500).json({ error: errorMiembro.message });
+  }
+
+  // 4. Intenta vincular con socio existente por email
+  let socioVinculado = false;
+  try {
+    // Obtiene el email del usuario desde Supabase Auth
+    const { data: authData } = await supabaseAdmin.auth.admin.getUserById(userId);
+    const emailUsuario = authData?.user?.email;
+
+    if (emailUsuario) {
+      // Busca socio con ese email en la caja que no esté vinculado aún
+      const { data: socioExistente } = await supabaseAdmin
+        .from('socios')
+        .select('id, nombre, apellido')
+        .eq('caja_id', invitacion.caja_id)
+        .eq('email', emailUsuario)
+        .is('user_id', null)
+        .single();
+
+      if (socioExistente) {
+        await supabaseAdmin
+          .from('socios')
+          .update({
+            user_id:    userId,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', socioExistente.id);
+
+        socioVinculado = true;
+        console.log(`Socio ${socioExistente.nombre} ${socioExistente.apellido} vinculado a user ${userId}`);
+      }
+    }
+  } catch (err) {
+    // Si falla la vinculación no es crítico — el usuario igual entra a la caja
+    console.error('Error al vincular socio:', err.message);
+  }
+
+  // 5. Marca la invitación como usada
+  await supabaseAdmin
+    .from('invitaciones_caja')
+    .update({
+      usado_por: userId,
+      usado_at:  new Date().toISOString(),
+      activo:    false,
+    })
+    .eq('id', invitacion.id);
+
+  return res.json({
+    message: `Te uniste a ${invitacion.cajas.nombre} correctamente`,
+    socioVinculado,   // ← el frontend puede mostrar un mensaje diferente si se vinculó
+    caja: {
+      id:     invitacion.caja_id,
+      nombre: invitacion.cajas.nombre,
+      rol:    invitacion.rol,
+    }
   });
 });
 

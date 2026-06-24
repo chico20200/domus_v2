@@ -2,6 +2,7 @@
 export interface Socio {
   id:            string
   caja_id:       string
+  user_id:       string | null 
   cedula:        string
   nombre:        string
   apellido:      string

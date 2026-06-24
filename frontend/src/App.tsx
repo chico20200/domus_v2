@@ -12,8 +12,9 @@ import CajasPage        from "./pages/CajasPage"
 import DashboardPage from "./pages/DashboardPage"
 import SociosPage from "./pages/SociosPage"
 import AhorrosPage from "./pages/AhorrosPage"
-
-
+import ConfiguracionPage from "./pages/ConfiguracionPage"
+import CreditosPage from "./pages/CreditosPage"
+import { RolRoute } from "./components/RolRoute"
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, isLoading } = useAuth()
@@ -43,12 +44,25 @@ export default function App() {
               }/>
 
               {/* Rutas dentro de una caja */}
-              <Route path="/dashboard"  element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
-              <Route path="/perfil"     element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
-              <Route path="/socios"     element={<ProtectedRoute><SociosPage /></ProtectedRoute>} /> 
-              <Route path="/ahorros" element={
-  <ProtectedRoute><AhorrosPage /></ProtectedRoute>
+               <Route path="/perfil"     element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+              <Route path="/dashboard" element={
+  <ProtectedRoute>
+    <RolRoute rolMinimo="tesorero">    {/* socio → redirige a /ahorros */}
+      <DashboardPage />
+    </RolRoute>
+  </ProtectedRoute>
 }/>
+             
+              <Route path="/socios" element={
+  <ProtectedRoute>
+    <RolRoute rolMinimo="tesorero">
+      <SociosPage />
+    </RolRoute>
+  </ProtectedRoute>
+}/>
+              <Route path="/ahorros" element={<ProtectedRoute><AhorrosPage /></ProtectedRoute>}/>
+              <Route path="/creditos" element={<ProtectedRoute><CreditosPage /></ProtectedRoute>} />
+              <Route path="/configuracion" element={<ProtectedRoute><ConfiguracionPage /></ProtectedRoute>}/>
 
               {/* Redirige la raíz a /cajas */}
               <Route path="/" element={<Navigate to="/cajas" replace />} />

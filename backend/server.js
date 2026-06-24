@@ -13,7 +13,9 @@ const profileRoutes = require('./routes/profile.routes');
 const sociosRoutes = require('./routes/socios.routes');
 const cajasRoutes = require('./routes/cajas.routes');
 const ahorrosRoutes = require('./routes/ahorros.routes');
-
+const miembrosRoutes = require('./routes/miembros.routes');
+const creditosRoutes = require('./routes/creditos.routes');
+const pagosRoutes = require('./routes/pagos.routes');
 const app = express();
 
 // ── Middlewares ──────────────────────────────
@@ -28,7 +30,9 @@ app.use('/api/profiles', profileRoutes);
 app.use('/api/cajas', cajasRoutes);
 app.use('/api/cajas/:cajaId/socios', sociosRoutes);
 app.use('/api/cajas/:cajaId/cuentas', ahorrosRoutes);
-
+app.use('/api/cajas/:cajaId/miembros', miembrosRoutes);
+app.use('/api/cajas/:cajaId/creditos', creditosRoutes);
+app.use('/api/cajas/:cajaId/pagos', pagosRoutes);
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {

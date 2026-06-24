@@ -31,20 +31,20 @@ export default function LoginPage() {
 
   return (
 
-    <div className="min-h-screen bg-bg_base flex flex-col">
+    <div className="min-h-screen flex flex-col" style={{ background: 'var(--bg-base)' }}>
 
       <div className = "flex flex-row items-center justify-center mt-8">
         <img src="/logo_domus.png" alt="Logo de la caja" className="w-24"/>
-        <h1 className="text-2xl font-semibold text-text_primary">Domus</h1>
+        <h1 className="text-2xl font-semibold" style={{ color: 'var(--text-primary)' }}>Domus</h1>
      </div>
 
-      <div className="m-5 bg-bg_base flex justify-center items-center p-1">
+      <div className="m-5 flex justify-center items-center p-1" style={{ background: 'var(--bg-base)' }}>
         
-        <div className="w-full max-w-sm flex flex-col bg-secondary_wt gap-5 p-5 rounded-lg shadow-md">
+        <div className="w-full max-w-sm flex flex-col gap-5 p-5 rounded-lg shadow-md" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-base)' }}>
 
           <div className="text-center">
-            <h1 className="text-2xl font-semibold text-text_primary">Iniciar sesión</h1>
-            <p className="text-sm text-text_secondary mt-1">Accede a tu caja de ahorro</p>
+            <h1 className="text-2xl font-semibold" style={{ color: 'var(--text-primary)' }}>Iniciar sesión</h1>
+            <p className="text-sm mt-1" style={{ color: 'var(--text-secondary)' }}>Accede a tu caja de ahorro</p>
           </div>
 
           <Field
@@ -70,7 +70,7 @@ export default function LoginPage() {
             required
           />
           <div className="text-right">
-          <Link to="/forgot-password" className="text-xs text-primary_y hover:underline">
+          <Link to="/forgot-password" className="text-xs hover:underline" style={{ color: 'var(--color-primary_y)' }}>
           ¿Olvidaste tu contraseña?
           </Link>
 </div>
@@ -86,8 +86,8 @@ export default function LoginPage() {
 
         </div>
       </div>
-      <p className="text-center text-sm text-text_secondary mt-auto mb-4">
-        No tienes cuenta? <Link to="/register" className="text-secondary_g hover:underline">Regístrate aquí</Link>
+      <p className="text-center text-sm mt-auto mb-4" style={{ color: 'var(--text-secondary)' }}>
+        No tienes cuenta? <Link to="/register" className="hover:underline" style={{ color: 'var(--color-secondary_g)' }}>Regístrate aquí</Link>
       </p>
      </div>
   )

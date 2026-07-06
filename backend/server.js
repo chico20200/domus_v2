@@ -16,6 +16,7 @@ const ahorrosRoutes = require('./routes/ahorros.routes');
 const miembrosRoutes = require('./routes/miembros.routes');
 const creditosRoutes = require('./routes/creditos.routes');
 const pagosRoutes = require('./routes/pagos.routes');
+const donacionesRoutes = require('./routes/donaciones.routes');
 const app = express();
 
 // ── Middlewares ──────────────────────────────
@@ -33,7 +34,7 @@ app.use('/api/cajas/:cajaId/cuentas', ahorrosRoutes);
 app.use('/api/cajas/:cajaId/miembros', miembrosRoutes);
 app.use('/api/cajas/:cajaId/creditos', creditosRoutes);
 app.use('/api/cajas/:cajaId/pagos', pagosRoutes);
-
+app.use('/api/donaciones', donacionesRoutes);
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Servidor corriendo en http://localhost:${PORT}`);

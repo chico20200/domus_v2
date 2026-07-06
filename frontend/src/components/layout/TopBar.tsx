@@ -1,8 +1,10 @@
 // src/components/layout/TopBar.tsx
-import { Sun, Moon, Bell, LogOut } from "lucide-react"
+import { Sun, Moon, Bell, LogOut, Heart  } from "lucide-react"
 import { useTheme } from "../../context/ThemeContext"
 import { useAuth }  from "../../context/AuthContext"
 import { useNavigate } from 'react-router-dom'
+import { DonacionModal } from "../DonacionModal"
+import { useState } from "react"
 
 interface TopBarProps {
   titulo: string
@@ -11,6 +13,7 @@ interface TopBarProps {
 export function TopBar({ titulo }: TopBarProps) {
   const { isDark, toggleTheme } = useTheme()
   const { user, logout }        = useAuth()
+  const [showDonacion, setShowDonacion] = useState(false)
   const navigate = useNavigate()
 
   // Iniciales del usuario para el avatar
@@ -45,6 +48,24 @@ export function TopBar({ titulo }: TopBarProps) {
       {/* Acciones */}
       <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
 
+         {/* Botón donar — nuevo */}
+        <button
+          onClick={() => setShowDonacion(true)}
+          aria-label="Donar"
+          style={{
+            ...iconBtnStyle,
+            width:  "auto",
+            gap:    "6px",
+            padding: "0 12px",
+            color:  "var(--color-danger_r)",
+            borderColor: "var(--color-danger_r)",
+          }}
+        >
+          <Heart size={15} />
+          <span style={{ fontSize: "13px" }}>Donar</span>
+        </button>
+
+      
         {/* Toggle tema */}
         <button
           onClick={toggleTheme}
@@ -92,6 +113,8 @@ export function TopBar({ titulo }: TopBarProps) {
           <LogOut size={16} />
         </button>
       </div>
+        {/* Modal de donación */}
+      {showDonacion && <DonacionModal onCerrar={() => setShowDonacion(false)} />}
     </header>
   )
 }

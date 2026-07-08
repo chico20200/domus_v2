@@ -2,6 +2,7 @@
 import { useState } from "react"
 import  {Sidebar}  from "./Sidebar"
 import { TopBar }  from "./TopBar"
+import { ChatbotFlotante } from "../ChatbotFlotante"
 
 interface AppLayoutProps {
   children: React.ReactNode
@@ -31,6 +32,7 @@ export function AppLayout({ children, titulo }: AppLayoutProps) {
           {children}
         </main>
       </div>
+      <ChatbotFlotante />
     </div>
   )
 }

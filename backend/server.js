@@ -34,7 +34,9 @@ app.use('/api/cajas/:cajaId/socios', sociosRoutes);
 app.use('/api/cajas/:cajaId/cuentas', ahorrosRoutes);
 app.use('/api/cajas/:cajaId/miembros', miembrosRoutes);
 app.use('/api/cajas/:cajaId/creditos', creditosRoutes);
-app.use('/api/cajas/:cajaId/pagos', pagosRoutes);
+app.use('/api/cajas/:cajaId/creditos/:creditoId/pagos', pagosRoutes);
+// La ruta de interés mensual también cuelga de aquí, o móntala aparte:
+app.use('/api/cajas/:cajaId', pagosRoutes);  // para /interes-mensual
 app.use('/api/donaciones', donacionesRoutes);
 app.use('/api/chatbot', chatbotRoutes);
 const PORT = process.env.PORT || 3000;

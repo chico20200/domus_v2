@@ -190,59 +190,59 @@ router.put('/:creditoId/aprobar', async (req, res) => {
 // POST /api/cajas/:cajaId/creditos/:creditoId/pago
 // Registra un pago para el crédito
 // ─────────────────────────────────────────────
-router.post('/:creditoId/pago', async (req, res) => {
-	const { cajaId, creditoId } = req.params
-	const rol = await verificarRol(req.user.id, cajaId, 'tesorero')
-	if (!rol) return res.status(403).json({ error: 'Se requiere rol tesorero o admin' })
+// router.post('/:creditoId/pago', async (req, res) => {
+// 	const { cajaId, creditoId } = req.params
+// 	const rol = await verificarRol(req.user.id, cajaId, 'tesorero')
+// 	if (!rol) return res.status(403).json({ error: 'Se requiere rol tesorero o admin' })
 
-	const { monto, descripcion } = req.body
-	if (!monto || isNaN(monto) || monto <= 0) return res.status(400).json({ error: 'Monto inválido' })
+// 	const { monto, descripcion } = req.body
+// 	if (!monto || isNaN(monto) || monto <= 0) return res.status(400).json({ error: 'Monto inválido' })
 
-	const { data: credito } = await supabaseAdmin
-		.from('creditos')
-		.select('*')
-		.eq('id', creditoId)
-		.eq('caja_id', cajaId)
-		.single()
+// 	const { data: credito } = await supabaseAdmin
+// 		.from('creditos')
+// 		.select('*')
+// 		.eq('id', creditoId)
+// 		.eq('caja_id', cajaId)
+// 		.single()
 
-	if (!credito) return res.status(404).json({ error: 'Crédito no encontrado' })
-	if (credito.estado !== 'activo') return res.status(400).json({ error: 'El crédito no está activo' })
+// 	if (!credito) return res.status(404).json({ error: 'Crédito no encontrado' })
+// 	if (credito.estado !== 'activo') return res.status(400).json({ error: 'El crédito no está activo' })
 
-	const pago = parseFloat(monto)
-	const saldoAnterior = parseFloat(credito.saldo_pendiente)
-	const saldoPosterior = Math.max(0, +(saldoAnterior - pago).toFixed(2))
+// 	const pago = parseFloat(monto)
+// 	const saldoAnterior = parseFloat(credito.saldo_pendiente)
+// 	const saldoPosterior = Math.max(0, +(saldoAnterior - pago).toFixed(2))
 
-	// Inserta registro de pago
-	const { data: pagoData, error: errorPago } = await supabaseAdmin
-		.from('pagos_credito')
-		.insert({
-			credito_id: creditoId,
-			caja_id: cajaId,
-			socio_id: credito.socio_id,
-			monto: pago,
-			descripcion: descripcion ?? '',
-			registrado_por: req.user.id,
-		})
-		.select()
-		.single()
+// 	// Inserta registro de pago
+// 	const { data: pagoData, error: errorPago } = await supabaseAdmin
+// 		.from('pagos_credito')
+// 		.insert({
+// 			credito_id: creditoId,
+// 			caja_id: cajaId,
+// 			socio_id: credito.socio_id,
+// 			monto: pago,
+// 			descripcion: descripcion ?? '',
+// 			registrado_por: req.user.id,
+// 		})
+// 		.select()
+// 		.single()
 
-	if (errorPago) return res.status(500).json({ error: errorPago.message })
+// 	if (errorPago) return res.status(500).json({ error: errorPago.message })
 
-	// Actualiza saldo pendiente y estado si corresponde
-	const updates = { saldo_pendiente: saldoPosterior, updated_at: new Date().toISOString() }
-	if (saldoPosterior <= 0) updates.estado = 'pagado'
+// 	// Actualiza saldo pendiente y estado si corresponde
+// 	const updates = { saldo_pendiente: saldoPosterior, updated_at: new Date().toISOString() }
+// 	if (saldoPosterior <= 0) updates.estado = 'pagado'
 
-	const { data: creditoActualizado, error: errorUpd2 } = await supabaseAdmin
-		.from('creditos')
-		.update(updates)
-		.eq('id', creditoId)
-		.select()
-		.single()
+// 	const { data: creditoActualizado, error: errorUpd2 } = await supabaseAdmin
+// 		.from('creditos')
+// 		.update(updates)
+// 		.eq('id', creditoId)
+// 		.select()
+// 		.single()
 
-	if (errorUpd2) return res.status(500).json({ error: errorUpd2.message })
+// 	if (errorUpd2) return res.status(500).json({ error: errorUpd2.message })
 
-	return res.json({ message: 'Pago registrado', pago: pagoData, credito: creditoActualizado })
-})
+// 	return res.json({ message: 'Pago registrado', pago: pagoData, credito: creditoActualizado })
+// })
 
 // ─────────────────────────────────────────────
 // PUT /api/cajas/:cajaId/creditos/:creditoId/estado

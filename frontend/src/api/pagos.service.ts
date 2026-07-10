@@ -1,23 +1,26 @@
 // src/api/pagos.service.ts
-import { apiClient } from './api.client'
-import type { PagosResponse, PagoResponse, CreatePagoRequest, CreatePagoResponse } from './pagos.types'
+import { apiClient } from "./api.client"
+import type {
+  GetPagosResponse,
+  RegistrarPagoResponse,
+  TipoPago,
+} from "./pagos.types"
 
 export const pagosService = {
-  async getPagos(cajaId: string): Promise<PagosResponse> {
-    return apiClient.get<PagosResponse>(`/cajas/${cajaId}/pagos`)
+  async getPagos(cajaId: string, creditoId: string): Promise<GetPagosResponse> {
+    return apiClient.get<GetPagosResponse>(
+      `/cajas/${cajaId}/creditos/${creditoId}/pagos`
+    )
   },
 
-  async getPago(cajaId: string, pagoId: string): Promise<PagoResponse> {
-    return apiClient.get<PagoResponse>(`/cajas/${cajaId}/pagos/${pagoId}`)
-  },
-
-  async getPagosByCredito(cajaId: string, creditoId: string): Promise<PagosResponse> {
-    return apiClient.get<PagosResponse>(`/cajas/${cajaId}/pagos/credito/${creditoId}`)
-  },
-
-  async crear(cajaId: string, data: CreatePagoRequest): Promise<CreatePagoResponse> {
-    return apiClient.post<CreatePagoResponse>(`/cajas/${cajaId}/pagos`, data)
+  async registrarPago(
+    cajaId: string,
+    creditoId: string,
+    tipoPago: TipoPago
+  ): Promise<RegistrarPagoResponse> {
+    return apiClient.post<RegistrarPagoResponse>(
+      `/cajas/${cajaId}/creditos/${creditoId}/pagos`,
+      { tipo_pago: tipoPago }
+    )
   },
 }
-
-export default pagosService

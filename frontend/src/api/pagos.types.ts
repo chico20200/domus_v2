@@ -1,40 +1,32 @@
 // src/api/pagos.types.ts
 export interface PagoCredito {
-  id: string
-  caja_id: string
-  credito_id: string
-  numero_cuota: number
-  monto_pagado: number
-  // Campos legacy - algunos endpoints anteriores usan `monto` y `descripcion`
-  monto?: number
-  descripcion?: string
-  saldo_antes: number
-  saldo_despues: number
-  fecha_pago: string
-  registrado_por: string
-  created_at?: string
-  updated_at?: string
+  id:             string
+  caja_id:        string
+  credito_id:     string
+  numero_cuota:   number
+  monto_pagado:   number
+  monto_capital:  number
+  monto_interes:  number
+  saldo_antes:    number
+  saldo_despues:  number
+  fecha_pago:     string
+  created_at:     string
 }
 
-export interface CreatePagoRequest {
-  credito_id: string
-  numero_cuota: number
-  monto_pagado: number
-  saldo_antes: number
-  saldo_despues: number
-  fecha_pago?: string
-}
+export type TipoPago = "completo" | "solo_capital" | "solo_interes"
 
-export interface PagosResponse {
+export interface GetPagosResponse {
   pagos: PagoCredito[]
 }
 
-export interface PagoResponse {
-  pago: PagoCredito
-}
-
-export interface CreatePagoResponse {
-  message?: string
-  pago: PagoCredito
-  credito?: any
+export interface RegistrarPagoResponse {
+  message:  string
+  pago:     PagoCredito
+  desglose: {
+    capital: number
+    interes: number
+    total:   number
+  }
+  saldo_pendiente: number
+  credito_pagado:  boolean
 }

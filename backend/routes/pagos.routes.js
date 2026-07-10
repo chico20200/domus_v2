@@ -150,40 +150,40 @@ router.post('/', async (req, res) => {
 // GET /api/cajas/:cajaId/interes-mensual
 // Suma de intereses recaudados en un mes específico
 // ─────────────────────────────────────────────
-router.get('/interes-mensual', async (req, res) => {
-  const { cajaId } = req.params;
-  const { anio, mes } = req.query;  // ?anio=2026&mes=7
+// router.get('/interes-mensual', async (req, res) => {
+//   const { cajaId } = req.params;
+//   const { anio, mes } = req.query;  // ?anio=2026&mes=7
 
-  const rol = await verificarRol(req.user.id, cajaId, 'tesorero');
-  if (!rol) return res.status(403).json({ error: 'Se requiere rol tesorero o admin' });
+//   const rol = await verificarRol(req.user.id, cajaId, 'tesorero');
+//   if (!rol) return res.status(403).json({ error: 'Se requiere rol tesorero o admin' });
 
-  if (!anio || !mes) {
-    return res.status(400).json({ error: 'Se requiere año y mes' });
-  }
+//   if (!anio || !mes) {
+//     return res.status(400).json({ error: 'Se requiere año y mes' });
+//   }
 
-  // Rango del mes
-  const inicio = `${anio}-${String(mes).padStart(2, '0')}-01`;
-  const finMes = new Date(parseInt(anio), parseInt(mes), 0).getDate();
-  const fin    = `${anio}-${String(mes).padStart(2, '0')}-${finMes}`;
+//   // Rango del mes
+//   const inicio = `${anio}-${String(mes).padStart(2, '0')}-01`;
+//   const finMes = new Date(parseInt(anio), parseInt(mes), 0).getDate();
+//   const fin    = `${anio}-${String(mes).padStart(2, '0')}-${finMes}`;
 
-  const { data, error } = await supabaseAdmin
-    .from('pagos_credito')
-    .select('monto_capital, monto_interes, monto_pagado')
-    .eq('caja_id', cajaId)
-    .gte('fecha_pago', inicio)
-    .lte('fecha_pago', fin);
+//   const { data, error } = await supabaseAdmin
+//     .from('pagos_credito')
+//     .select('monto_capital, monto_interes, monto_pagado')
+//     .eq('caja_id', cajaId)
+//     .gte('fecha_pago', inicio)
+//     .lte('fecha_pago', fin);
 
-  if (error) return res.status(500).json({ error: error.message });
+//   if (error) return res.status(500).json({ error: error.message });
 
-  const totalInteres = (data ?? []).reduce((s, p) => s + parseFloat(p.monto_interes), 0);
-  const totalCapital = (data ?? []).reduce((s, p) => s + parseFloat(p.monto_capital), 0);
+//   const totalInteres = (data ?? []).reduce((s, p) => s + parseFloat(p.monto_interes), 0);
+//   const totalCapital = (data ?? []).reduce((s, p) => s + parseFloat(p.monto_capital), 0);
 
-  return res.json({
-    periodo:        `${anio}-${String(mes).padStart(2, '0')}`,
-    total_interes:  +totalInteres.toFixed(2),
-    total_capital:  +totalCapital.toFixed(2),
-    cantidad_pagos: data?.length ?? 0,
-  });
-});
+//   return res.json({
+//     periodo:        `${anio}-${String(mes).padStart(2, '0')}`,
+//     total_interes:  +totalInteres.toFixed(2),
+//     total_capital:  +totalCapital.toFixed(2),
+//     cantidad_pagos: data?.length ?? 0,
+//   });
+// });
 
 module.exports = router;

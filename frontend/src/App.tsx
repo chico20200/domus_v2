@@ -14,6 +14,7 @@ import SociosPage from "./pages/SociosPage"
 import AhorrosPage from "./pages/AhorrosPage"
 import ConfiguracionPage from "./pages/ConfiguracionPage"
 import CreditosPage from "./pages/CreditosPage"
+import PagosPage from "./pages/PagosPage"
 import { RolRoute } from "./components/RolRoute"
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -62,6 +63,7 @@ export default function App() {
 }/>
               <Route path="/ahorros" element={<ProtectedRoute><AhorrosPage /></ProtectedRoute>}/>
               <Route path="/creditos" element={<ProtectedRoute><CreditosPage /></ProtectedRoute>} />
+              <Route path="/pagos" element={<ProtectedRoute><PagosPage /></ProtectedRoute>}/>
               <Route path="/configuracion" element={<ProtectedRoute><ConfiguracionPage /></ProtectedRoute>}/>
 
               {/* Redirige la raíz a /cajas */}

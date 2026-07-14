@@ -40,35 +40,60 @@ router.get('/', async (req, res) => {
   const rol = await verificarRol(req.user.id, cajaId, 'socio');
   if (!rol) return res.status(403).json({ error: 'Sin acceso a esta caja' });
 
-  const { data, error } = await supabaseAdmin
+  // 1. Trae los miembros con su user_id
+  const { data: miembros, error } = await supabaseAdmin
     .from('miembros_caja')
-    .select(`
-      id,
-      rol,
-      activo,
-      created_at,
-      profiles ( nombre, telefono, foto_url ),
-      auth_user_email:user_id
-    `)
+    .select('id, user_id, rol, activo, created_at')
     .eq('caja_id', cajaId)
+    .eq('activo', true)
     .order('created_at', { ascending: true });
 
-  if (error) return res.status(500).json({ error: error.message });
+  if (error) {
+    console.error('Error al leer miembros:', error.message);
+    return res.status(500).json({ error: error.message });
+  }
 
-  // Enriquece con email desde auth.users
-  const miembrosConEmail = await Promise.all(
-    (data ?? []).map(async m => {
-      const { data: authUser } = await supabaseAdmin.auth.admin.getUserById(m.auth_user_email);
-      return {
-        ...m,
-        email: authUser?.user?.email ?? '',
-      };
+  if (!miembros || miembros.length === 0) {
+    return res.json({ miembros: [] });
+  }
+
+  // 2. Trae los perfiles de esos usuarios
+  const userIds = miembros.map(m => m.user_id);
+
+  const { data: perfiles } = await supabaseAdmin
+    .from('profiles')
+    .select('id, nombre, telefono, foto_url')
+    .in('id', userIds);
+
+  const perfilPorId = {};
+  (perfiles ?? []).forEach(p => { perfilPorId[p.id] = p; });
+
+  // 3. Trae los emails desde auth.users
+  const emailPorId = {};
+  await Promise.all(
+    userIds.map(async uid => {
+      try {
+        const { data } = await supabaseAdmin.auth.admin.getUserById(uid);
+        emailPorId[uid] = data?.user?.email ?? '';
+      } catch {
+        emailPorId[uid] = '';
+      }
     })
   );
 
-  return res.json({ miembros: miembrosConEmail });
-});
+  // 4. Arma la respuesta
+  const resultado = miembros.map(m => ({
+    id:       m.user_id,        // ← el frontend usa este id para cambiar rol / remover
+    rol:      m.rol,
+    activo:   m.activo,
+    email:    emailPorId[m.user_id] ?? '',
+    profiles: perfilPorId[m.user_id]
+      ? { nombre: perfilPorId[m.user_id].nombre }
+      : null,
+  }));
 
+  return res.json({ miembros: resultado });
+});
 // ─────────────────────────────────────────────
 // PUT /api/cajas/:cajaId/miembros/:userId
 // Cambia el rol de un miembro — solo admin

@@ -11,7 +11,9 @@ import { creditosService }      from "../api/creditos.service"
 import { pagosService }         from "../api/pagos.service"
 import type { Credito }         from "../api/creditos.types"
 import type { TipoPago }        from "../api/pagos.types"
-
+import { ConfirmarPagoModal } from "../components/ConfirmarPagoModal"
+import { useNotif } from "../context/NotifContext"
+  
 function formatMonto(m: number) {
   return new Intl.NumberFormat("es-EC", {
     style: "currency", currency: "USD", minimumFractionDigits: 2
@@ -27,6 +29,7 @@ export default function PagosPage() {
   const [procesando,   setProcesando]   = useState<string | null>(null)  // id del crédito que se procesa
   const [busqueda,     setBusqueda]     = useState("")
   const [confirmacion, setConfirmacion] = useState<{ credito: Credito; tipo: TipoPago } | null>(null)
+  const { toast } = useNotif()
 
   useEffect(() => {
     if (!cajaActiva) { navigate("/cajas", { replace: true }); return }
@@ -45,22 +48,24 @@ export default function PagosPage() {
   }
 
   async function ejecutarPago() {
-    if (!confirmacion) return
-    const { credito, tipo } = confirmacion
-    setConfirmacion(null)
-    setProcesando(credito.id)
-    try {
-      const res = await pagosService.registrarPago(cajaActiva!.id, credito.id, tipo)
-      await cargarCreditos()
-      if (res.credito_pagado) {
-        alert(`Crédito de ${credito.socios?.nombre ?? ""} pagado por completo`)
-      }
-    } catch (err) {
-      alert(err instanceof Error ? err.message : "Error al registrar pago")
-    } finally {
-      setProcesando(null)
-    }
+  if (!confirmacion) return
+  const { credito, tipo } = confirmacion
+  setConfirmacion(null)
+  setProcesando(credito.id)
+  try {
+    const res = await pagosService.registrarPago(cajaActiva!.id, credito.id, tipo)
+    await cargarCreditos()
+    const nombre = credito.socios ? `${credito.socios.nombre} ${credito.socios.apellido}` : "el socio"
+    toast("exito", res.credito_pagado
+      ? `Crédito de ${nombre} pagado por completo`
+      : "Pago registrado correctamente"
+    )
+  } catch (err) {
+    toast("error", err instanceof Error ? err.message : "Error al registrar pago")
+  } finally {
+    setProcesando(null)
   }
+}
 
   // Filtro por nombre de socio
   const creditosFiltrados = creditos.filter(c => {
@@ -185,66 +190,21 @@ export default function PagosPage() {
       </div>
 
       {/* Modal de confirmación */}
-      {confirmacion && (() => {
-        const c = confirmacion.credito
-        const tipo = confirmacion.tipo
-        const capitalPrestado = Number(c.monto_solicitado)
-        const montoTotal      = Number(c.monto_total)
-        const plazo           = c.plazo_meses
-        const capitalCuota    = +(capitalPrestado / plazo).toFixed(2)
-        const interesCuota    = +((montoTotal - capitalPrestado) / plazo).toFixed(2)
-
-        const detalle = {
-          completo:     { capital: capitalCuota, interes: interesCuota, titulo: "Pago completo de cuota" },
-          solo_capital: { capital: capitalCuota, interes: 0,            titulo: "Pago de solo capital" },
-          solo_interes: { capital: 0,            interes: interesCuota, titulo: "Pago de solo interés" },
-        }[tipo]
-
-        const total = detalle.capital + detalle.interes
-
-        return (
-          <div className="fixed inset-0 flex items-center justify-center z-50 p-4"
-            style={{ background: "rgba(0,0,0,0.4)" }}
-          >
-            <div className="w-full max-w-sm rounded-xl p-5 flex flex-col gap-4"
-              style={{ background: "var(--bg-surface)" }}
-            >
-              <h3 className="font-medium" style={{ color: "var(--text-primary)" }}>
-                {detalle.titulo}
-              </h3>
-              <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
-                Pago para <strong>{c.socios?.nombre} {c.socios?.apellido}</strong>. Esta acción no se puede deshacer.
-              </p>
-
-              <div className="rounded-lg p-3 flex flex-col gap-1" style={{ background: "var(--bg-base)" }}>
-                {detalle.capital > 0 && (
-                  <div className="flex justify-between text-sm">
-                    <span style={{ color: "var(--text-secondary)" }}>Capital</span>
-                    <span style={{ color: "var(--text-primary)" }}>{formatMonto(detalle.capital)}</span>
-                  </div>
-                )}
-                {detalle.interes > 0 && (
-                  <div className="flex justify-between text-sm">
-                    <span style={{ color: "var(--text-secondary)" }}>Interés</span>
-                    <span style={{ color: "var(--text-primary)" }}>{formatMonto(detalle.interes)}</span>
-                  </div>
-                )}
-                <div className="flex justify-between text-sm font-medium pt-1 mt-1"
-                  style={{ borderTop: "1px solid var(--border-base)", color: "var(--text-primary)" }}
-                >
-                  <span>Total</span>
-                  <span>{formatMonto(total)}</span>
-                </div>
-              </div>
-
-              <div className="flex gap-3">
-                <Button label="Confirmar pago" variant="primary" onClick={ejecutarPago} />
-                <Button label="Cancelar" variant="secondary" onClick={() => setConfirmacion(null)} />
-              </div>
-            </div>
-          </div>
-        )
-      })()}
+      {confirmacion && cajaActiva && (
+        <ConfirmarPagoModal
+          cajaId={cajaActiva.id}
+          creditoId={confirmacion.credito.id}
+          tipo={confirmacion.tipo}
+          nombreSocio={
+            confirmacion.credito.socios
+              ? `${confirmacion.credito.socios.nombre} ${confirmacion.credito.socios.apellido}`
+              : undefined
+          }
+          procesando={procesando === confirmacion.credito.id}
+          onConfirmar={ejecutarPago}
+          onCancelar={() => setConfirmacion(null)}
+        />
+      )}
     </AppLayout>
   )
 }

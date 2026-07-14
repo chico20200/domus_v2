@@ -1,5 +1,6 @@
 // src/api/creditos.service.ts
 import { apiClient } from './api.client'
+import type { GetAmortizacionResponse } from './amortizacion.types'
 import type {
   GetCreditosResponse,
   GetCreditoResponse,
@@ -18,6 +19,12 @@ export const creditosService = {
     return apiClient.get<GetCreditoResponse>(`/cajas/${cajaId}/creditos/${creditoId}`)
   },
 
+  async getAmortizacion(cajaId: string, creditoId: string): Promise<GetAmortizacionResponse> {
+    return apiClient.get<GetAmortizacionResponse>(
+      `/cajas/${cajaId}/creditos/${creditoId}/amortizacion`
+    )
+  },
+  
   async getCreditosSocio(cajaId: string, socioId: string): Promise<GetCreditosResponse> {
     return apiClient.get<GetCreditosResponse>(`/cajas/${cajaId}/creditos/socio/${socioId}`)
   },

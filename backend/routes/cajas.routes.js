@@ -4,9 +4,25 @@ const router     = express.Router();
 const supabase   = require('../config/supabaseAdmin');
 const supabaseAdmin = require('../config/supabaseAdmin');  
 const verifyToken = require('../middlewares/auth.middleware');
-
+const { calcularCiclos } = require('../utils/ciclos');
 
 router.use(verifyToken);
+
+async function verificarRol(userId, cajaId, rolMinimo = 'socio') {
+  const jerarquia = { socio: 1, tesorero: 2, admin: 3 };
+
+  const { data } = await supabaseAdmin
+    .from('miembros_caja')
+    .select('rol')
+    .eq('caja_id', cajaId)
+    .eq('user_id', userId)
+    .eq('activo', true)
+    .single();
+
+  if (!data) return null;
+  if (jerarquia[data.rol] < jerarquia[rolMinimo]) return null;
+  return data.rol;
+}
 
 // ─────────────────────────────────────────────
 // GET /api/cajas/mis-cajas
@@ -435,6 +451,94 @@ router.post('/unirse', async (req, res) => {
       nombre: invitacion.cajas.nombre,
       rol:    invitacion.rol,
     }
+  });
+});
+
+// ─────────────────────────────────────────────
+// GET /api/cajas/:cajaId/ciclos
+// Lista todos los ciclos de la caja
+// ─────────────────────────────────────────────
+router.get('/:cajaId/ciclos', async (req, res) => {
+  const { cajaId } = req.params;
+  const rol = await verificarRol(req.user.id, cajaId, 'socio');
+  if (!rol) return res.status(403).json({ error: 'Sin acceso a esta caja' });
+
+ const { data: caja } = await supabaseAdmin
+  .from('cajas')
+  .select('fecha_fundacion, mes_inicio_ciclo, duracion_ciclo, created_at')
+  .eq('id', cajaId).single();
+  if (!caja) return res.status(404).json({ error: 'Caja no encontrada' });
+
+  // Si no está configurado, no hay ciclos que mostrar
+  if (!caja.fecha_fundacion) {
+    return res.json({
+      configurado: false,
+      ciclos: [],
+      ciclo_actual: null,
+      mensaje: 'El periodo de la caja aún no está configurado',
+    });
+  }
+
+  const { ciclos, cicloActual } = calcularCiclos(
+    caja.fecha_fundacion,
+    caja.mes_inicio_ciclo,
+    caja.duracion_ciclo
+  );
+
+  return res.json({
+    configurado: true,
+    config: {
+      fecha_fundacion:  caja.fecha_fundacion,
+      mes_inicio_ciclo: caja.mes_inicio_ciclo,
+      duracion_ciclo:   caja.duracion_ciclo,
+    },
+    ciclos,
+    ciclo_actual: cicloActual,
+  });
+});
+
+// ─────────────────────────────────────────────
+// PUT /api/cajas/:cajaId/configuracion-ciclo
+// Configura el periodo de la caja — solo admin
+// ─────────────────────────────────────────────
+router.put('/:cajaId/configuracion-ciclo', async (req, res) => {
+  const { cajaId } = req.params;
+  const rol = await verificarRol(req.user.id, cajaId, 'admin');
+  if (!rol) return res.status(403).json({ error: 'Se requiere rol admin' });
+
+  const { fecha_fundacion, mes_inicio_ciclo, duracion_ciclo } = req.body;
+
+  if (!fecha_fundacion) {
+    return res.status(400).json({ error: 'La fecha de fundación es requerida' });
+  }
+  const mes = parseInt(mes_inicio_ciclo);
+  if (!mes || mes < 1 || mes > 12) {
+    return res.status(400).json({ error: 'El mes de inicio debe estar entre 1 y 12' });
+  }
+  const dur = parseInt(duracion_ciclo ?? 12);
+  if (!dur || dur < 1 || dur > 24) {
+    return res.status(400).json({ error: 'La duración debe estar entre 1 y 24 meses' });
+  }
+
+  const { data, error } = await supabaseAdmin
+    .from('cajas')
+    .update({
+      fecha_fundacion:  fecha_fundacion,
+      mes_inicio_ciclo: mes,
+      duracion_ciclo:   dur,
+      updated_at:       new Date().toISOString(),
+    })
+    .eq('id', cajaId)
+    .select().single();
+
+  if (error) return res.status(500).json({ error: error.message });
+
+  const { ciclos, cicloActual } = calcularCiclos(fecha_fundacion, mes, dur);
+
+  return res.json({
+    message: 'Configuración guardada correctamente',
+    ciclos,
+    ciclo_actual: cicloActual,
   });
 });
 

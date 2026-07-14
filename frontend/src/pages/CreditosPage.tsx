@@ -13,8 +13,16 @@ import { creditosService }      from "../api/creditos.service"
 import { pagosService }         from "../api/pagos.service"
 import { sociosService }        from "../api/socios.service"
 import type { Credito }         from "../api/creditos.types"
-import type { PagoCredito, TipoPago } from "../api/pagos.types"
+import type { PagoCredito, ProximaCuota, TipoPago } from "../api/pagos.types"
 import type { Socio }           from "../api/socios.types"
+import { TablaAmortizacion } from "../components/TablaAmortizacion"
+import { FileText } from "lucide-react"
+import { ConfirmarPagoModal } from "../components/ConfirmarPagoModal"
+import { useNotif } from "../context/NotifContext"
+import { AbonoModal } from "../components/AbonoModal"
+import { HandCoins }  from "lucide-react"
+
+
 
 function formatMonto(m: number) {
   return new Intl.NumberFormat("es-EC", {
@@ -62,6 +70,10 @@ export default function CreditosPage() {
 
   //confirmación
   const [confirmacion, setConfirmacion] = useState<TipoPago | null>(null)
+  const [showAmortizacion, setShowAmortizacion] = useState(false)
+  const [proxima, setProxima] = useState<ProximaCuota | null>(null)
+  const { toast, confirm } = useNotif()
+  const [showAbono, setShowAbono] = useState(false)
 
   useEffect(() => {
     if (!cajaActiva) { navigate("/cajas", { replace: true }); return }
@@ -82,17 +94,22 @@ export default function CreditosPage() {
     }
   }
 
-  async function verDetalle(credito: Credito) {
+ async function verDetalle(credito: Credito) {
     setLoading(true)
     try {
-      const res = await creditosService.getCredito(cajaActiva!.id, credito.id)
+      const [res, prox] = await Promise.all([
+        creditosService.getCredito(cajaActiva!.id, credito.id),
+        pagosService.getProximaCuota(cajaActiva!.id, credito.id),
+      ])
       setCreditoActivo(res.credito)
       setPagos(res.pagos)
+      setProxima(prox)
       setVista("detalle")
     } finally {
       setLoading(false)
     }
   }
+  
 
   async function recargarDetalle() {
     if (!creditoActivo) return
@@ -126,18 +143,19 @@ export default function CreditosPage() {
   }
 
   async function handleAprobar() {
-    if (!creditoActivo) return
-    setProcesando(true)
-    try {
-      await creditosService.aprobar(cajaActiva!.id, creditoActivo.id)
-      await recargarDetalle()
-      await cargarDatos()
-    } catch (err) {
-      alert(err instanceof Error ? err.message : "Error al aprobar")
-    } finally {
-      setProcesando(false)
-    }
+  if (!creditoActivo) return
+  setProcesando(true)
+  try {
+    await creditosService.aprobar(cajaActiva!.id, creditoActivo.id)
+    await recargarDetalle()
+    await cargarDatos()
+    toast("exito", "Crédito aprobado y desembolsado")
+  } catch (err) {
+    toast("error", err instanceof Error ? err.message : "Error al aprobar")
+  } finally {
+    setProcesando(false)
   }
+}
 
   // El clic en el botón ahora solo abre la confirmación
 function pedirConfirmacion(tipo: TipoPago) {
@@ -155,10 +173,12 @@ async function ejecutarPago() {
     await recargarDetalle()
     await cargarDatos()
     if (res.credito_pagado) {
-      alert("¡Crédito pagado por completo!")
+      toast("exito", "¡Crédito pagado por completo!")
+    }else {
+      toast("exito", "Pago registrado correctamente")
     }
   } catch (err) {
-    alert(err instanceof Error ? err.message : "Error al registrar pago")
+    toast("error", err instanceof Error ? err.message : "Error al registrar pago")
   } finally {
     setProcesando(false)
   }
@@ -174,6 +194,52 @@ async function ejecutarPago() {
     const totalCapital = pagos.reduce((s, p) => s + Number(p.monto_capital), 0)
     const totalInteres = pagos.reduce((s, p) => s + Number(p.monto_interes), 0)
 
+    async function handlePrepago() {
+      if (!creditoActivo) return
+      const ok = await confirm({
+        titulo:  "¿Prepagar la última cuota?",
+        mensaje: "Se abonará el capital y se condonará el interés de esa cuota.",
+        labelOk: "Prepagar",
+      })
+      if (!ok) return
+
+      setProcesando(true)
+      try {
+        const res = await pagosService.prepagar(cajaActiva!.id, creditoActivo.id)
+        toast("exito", `Prepago registrado. Interés condonado: ${formatMonto(res.interes_condonado)}`)
+        await recargarDetalle()
+        await cargarDatos()
+      } catch (err) {
+        toast("error", err instanceof Error ? err.message : "Error al prepagar")
+      } finally {
+        setProcesando(false)
+      }
+    } 
+
+    async function handleAbono(monto: number, motivo: string) {
+  if (!creditoActivo) return
+  setProcesando(true)
+  try {
+    const res = await pagosService.abonar(cajaActiva!.id, creditoActivo.id, monto, motivo)
+    setShowAbono(false)
+    await recargarDetalle()
+    await cargarDatos()
+
+    if (res.credito_pagado) {
+      toast("exito", "¡Crédito pagado por completo!")
+    } else if (res.resta_en_cuota.total > 0.001) {
+      toast("advertencia",
+        `Abono registrado. Quedan ${formatMonto(res.resta_en_cuota.total)} pendientes de esta cuota.`
+      )
+    } else {
+      toast("exito", "Abono registrado. Cuota completada.")
+    }
+  } catch (err) {
+    toast("error", err instanceof Error ? err.message : "Error al registrar abono")
+  } finally {
+    setProcesando(false)
+  }
+}
     return (
       <AppLayout titulo="Créditos">
         <div className="flex flex-col gap-4 max-w-2xl">
@@ -236,6 +302,12 @@ async function ejecutarPago() {
               </div>
             </div>
           </div>
+          <Button
+            label="Ver tabla de amortización"
+            variant="secondary"
+            icon={FileText}
+            onClick={() => setShowAmortizacion(true)}
+          />
 
           {/* Acciones según estado */}
           {c.estado === "pendiente" && cajaActiva?.rol !== "socio" && (
@@ -259,16 +331,42 @@ async function ejecutarPago() {
               </p>
               <div className="flex flex-col gap-2">
                 <Button label="Pago completo (capital + interés)" variant="primary" icon={Wallet}
-  loading={procesando} onClick={() => pedirConfirmacion("completo")} />
-<Button label="Solo capital" variant="secondary" icon={Coins}
-  loading={procesando} onClick={() => pedirConfirmacion("solo_capital")} />
-<Button label="Solo interés" variant="secondary" icon={Coins}
-  loading={procesando} onClick={() => pedirConfirmacion("solo_interes")} />
+                  loading={procesando} onClick={() => pedirConfirmacion("completo")} />
+                <Button label="Solo capital" variant="secondary" icon={Coins}
+                  loading={procesando} onClick={() => pedirConfirmacion("solo_capital")} />
+                <Button label="Solo interés" variant="secondary" icon={Coins}
+                  loading={procesando} onClick={() => pedirConfirmacion("solo_interes")} />
                 </div>
+                <Button
+                  label="Abono parcial"
+                  variant="secondary"
+                  icon={HandCoins}
+                  onClick={() => setShowAbono(true)}
+                />
               
             </div>
           )}
-
+            {c.estado === "activo" && cajaActiva?.rol !== "socio" && proxima?.prepago_disponible && (
+            <div className="rounded-xl p-4"
+              style={{ background: "rgba(106,178,62,0.06)", border: "1px solid var(--border-base)" }}
+            >
+              <p className="text-sm font-medium mb-1" style={{ color: "var(--text-primary)" }}>
+                Prepagar cuota final
+              </p>
+              <p className="text-xs mb-3" style={{ color: "var(--text-secondary)" }}>
+                Abona el capital de la cuota #{proxima.prepago_disponible.numero_cuota} 
+                ({formatMonto(proxima.prepago_disponible.capital)}). 
+                Se condonan {formatMonto(proxima.prepago_disponible.interes_a_condonar)} de interés.
+              </p>
+              <Button
+                label="Registrar prepago"
+                variant="secondary"
+                icon={Coins}
+                loading={procesando}
+                onClick={handlePrepago}
+              />
+            </div>
+          )}
           {/* Resumen de pagos */}
           {pagos.length > 0 && (
             <div className="grid grid-cols-2 gap-3">
@@ -337,69 +435,43 @@ async function ejecutarPago() {
 
         </div>
         {/* Modal de confirmación de pago */}
-{confirmacion && creditoActivo && (() => {
-  // Calcula cuánto se pagará para mostrarlo en la confirmación
-  const capitalPrestado = Number(creditoActivo.monto_solicitado)
-  const montoTotal      = Number(creditoActivo.monto_total)
-  const plazo           = creditoActivo.plazo_meses
-  const capitalCuota    = +(capitalPrestado / plazo).toFixed(2)
-  const interesCuota    = +((montoTotal - capitalPrestado) / plazo).toFixed(2)
-
-  const detalle = {
-    completo:     { capital: capitalCuota, interes: interesCuota, titulo: "Pago completo de cuota" },
-    solo_capital: { capital: capitalCuota, interes: 0,            titulo: "Pago de solo capital" },
-    solo_interes: { capital: 0,            interes: interesCuota, titulo: "Pago de solo interés" },
-  }[confirmacion]
-
-  const total = detalle.capital + detalle.interes
-
-  return (
-    <div className="fixed inset-0 flex items-center justify-center z-50 p-4"
-      style={{ background: "rgba(0,0,0,0.4)" }}
-    >
-      <div className="w-full max-w-sm rounded-xl p-5 flex flex-col gap-4"
-        style={{ background: "var(--bg-surface)" }}
-      >
-        <h3 className="font-medium" style={{ color: "var(--text-primary)" }}>
-          {detalle.titulo}
-        </h3>
-
-        <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
-          Vas a registrar el siguiente pago. Esta acción no se puede deshacer.
-        </p>
-
-        {/* Desglose */}
-        <div className="rounded-lg p-3 flex flex-col gap-1"
-          style={{ background: "var(--bg-base)" }}
-        >
-          {detalle.capital > 0 && (
-            <div className="flex justify-between text-sm">
-              <span style={{ color: "var(--text-secondary)" }}>Capital</span>
-              <span style={{ color: "var(--text-primary)" }}>{formatMonto(detalle.capital)}</span>
-            </div>
-          )}
-          {detalle.interes > 0 && (
-            <div className="flex justify-between text-sm">
-              <span style={{ color: "var(--text-secondary)" }}>Interés</span>
-              <span style={{ color: "var(--text-primary)" }}>{formatMonto(detalle.interes)}</span>
-            </div>
-          )}
-          <div className="flex justify-between text-sm font-medium pt-1 mt-1"
-            style={{ borderTop: "1px solid var(--border-base)", color: "var(--text-primary)" }}
-          >
-            <span>Total</span>
-            <span>{formatMonto(total)}</span>
-          </div>
-        </div>
-
-        <div className="flex gap-3">
-          <Button label="Confirmar pago" variant="primary" onClick={ejecutarPago} />
-          <Button label="Cancelar" variant="danger" onClick={() => setConfirmacion(null)} />
-        </div>
-      </div>
-    </div>
-  )
-})()}
+{confirmacion && creditoActivo && cajaActiva && (
+  <ConfirmarPagoModal
+    cajaId={cajaActiva.id}
+    creditoId={creditoActivo.id}
+    tipo={confirmacion}
+    nombreSocio={
+      creditoActivo.socios
+        ? `${creditoActivo.socios.nombre} ${creditoActivo.socios.apellido}`
+        : undefined
+    }
+    procesando={procesando}
+    onConfirmar={ejecutarPago}
+    onCancelar={() => setConfirmacion(null)}
+  />
+)}
+    {showAmortizacion && creditoActivo && cajaActiva && (
+  <TablaAmortizacion
+    cajaId={cajaActiva.id}
+    creditoId={creditoActivo.id}
+    nombreCaja={cajaActiva.nombre}
+    onCerrar={() => setShowAmortizacion(false)}
+  />
+)}
+{showAbono && creditoActivo && cajaActiva && (
+  <AbonoModal
+    cajaId={cajaActiva.id}
+    creditoId={creditoActivo.id}
+    nombreSocio={
+      creditoActivo.socios
+        ? `${creditoActivo.socios.nombre} ${creditoActivo.socios.apellido}`
+        : undefined
+    }
+    procesando={procesando}
+    onConfirmar={handleAbono}
+    onCancelar={() => setShowAbono(false)}
+  />
+)}
       </AppLayout>
     )
   }
@@ -513,6 +585,8 @@ async function ejecutarPago() {
         </div>
 
       </div>
+      
     </AppLayout>
+    
   )
 }

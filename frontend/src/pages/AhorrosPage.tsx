@@ -15,6 +15,7 @@ import { sociosService }              from "../api/socios.service"
 import type { CuentaAhorro, Transaccion } from "../api/ahorros.types"
 import type { Socio }                 from "../api/socios.types"
 import { useAuth } from "../context/AuthContext"
+import { useNotif } from "../context/NotifContext"
 
 
 function formatMonto(m: number) {
@@ -52,6 +53,8 @@ export default function AhorrosPage() {
   const [descripcion, setDescripcion] = useState("")
   const [socioSel,    setSocioSel]    = useState("")
   const [errorModal,  setErrorModal]  = useState<string | undefined>(undefined)
+  const { toast } = useNotif()
+
 
   useEffect(() => {
     if (!cajaActiva) { navigate("/cajas", { replace: true }); return }
@@ -140,29 +143,27 @@ export default function AhorrosPage() {
   }
 
   async function handleOperacion(tipo: "deposito" | "retiro") {
-    const montoNum = parseFloat(monto)
-    if (!monto || isNaN(montoNum) || montoNum <= 0) {
-      setErrorModal("Ingresa un monto válido mayor a 0")
-      return
-    }
-    setProcesando(true)
-    setErrorModal(undefined)
-    try {
-      const fn = tipo === "deposito" ? ahorrosService.depositar : ahorrosService.retirar
-      await fn(cajaActiva!.id, cuentaActiva!.id, montoNum, descripcion)
-      // Recarga el detalle para ver el nuevo saldo y transacción
-      const res = await ahorrosService.getCuenta(cajaActiva!.id, cuentaActiva!.id)
-      setCuentaActiva(res.cuenta)
-      setTransacciones(res.transacciones)
-      // Actualiza también la lista
-      await cargarDatos()
-      cerrarModal()
-    } catch (err) {
-      setErrorModal(err instanceof Error ? err.message : "Error al procesar operación")
-    } finally {
-      setProcesando(false)
-    }
+  const montoNum = parseFloat(monto)
+  if (!monto || isNaN(montoNum) || montoNum <= 0) {
+    setErrorModal("Ingresa un monto válido mayor a 0")
+    return
   }
+  setProcesando(true)
+  try {
+    const fn = tipo === "deposito" ? ahorrosService.depositar : ahorrosService.retirar
+    await fn(cajaActiva!.id, cuentaActiva!.id, montoNum, descripcion)
+    const res = await ahorrosService.getCuenta(cajaActiva!.id, cuentaActiva!.id)
+    setCuentaActiva(res.cuenta)
+    setTransacciones(res.transacciones)
+    await cargarDatos()
+    cerrarModal()
+    toast("exito", tipo === "deposito" ? "Depósito registrado" : "Retiro registrado")
+  } catch (err) {
+    setErrorModal(err instanceof Error ? err.message : "Error al procesar operación")
+  } finally {
+    setProcesando(false)
+  }
+}
 
   // ── VISTA DETALLE ────────────────────────────────────────────
   if (vista === "detalle" && cuentaActiva) {

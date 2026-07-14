@@ -1,8 +1,13 @@
 // backend/routes/creditos.routes.js
-const express = require('express')
-const router = express.Router({ mergeParams: true })
-const supabaseAdmin = require('../config/supabaseAdmin')
-const verifyToken = require('../middlewares/auth.middleware')
+const express = require('express');
+const router = express.Router({ mergeParams: true });
+const supabaseAdmin = require('../config/supabaseAdmin');
+const verifyToken = require('../middlewares/auth.middleware');
+const { generarTablaAmortizacion, analizarEstadoCredito } = require('../utils/amortizacion');
+
+
+
+
 
 router.use(verifyToken)
 
@@ -270,5 +275,60 @@ router.put('/:creditoId/estado', async (req, res) => {
 	return res.json({ message: 'Estado actualizado', credito: data })
 })
 
-module.exports = router
 
+// ─────────────────────────────────────────────
+// GET /api/cajas/:cajaId/creditos/:creditoId/amortizacion
+// Tabla de amortización con estado de cada cuota
+// ─────────────────────────────────────────────
+router.get('/:creditoId/amortizacion', async (req, res) => {
+  const { cajaId, creditoId } = req.params;
+  const rol = await verificarRol(req.user.id, cajaId, 'socio');
+  if (!rol) return res.status(403).json({ error: 'Sin acceso a esta caja' });
+
+  const { data: credito, error } = await supabaseAdmin
+    .from('creditos')
+    .select('*, socios ( nombre, apellido, cedula )')
+    .eq('id', creditoId).eq('caja_id', cajaId).single();
+
+  if (error || !credito) return res.status(404).json({ error: 'Crédito no encontrado' });
+
+  const { data: pagos } = await supabaseAdmin
+    .from('pagos_credito').select('*').eq('credito_id', creditoId);
+
+  const { filas, interesCondonadoTotal, totalAbonos } = analizarEstadoCredito(credito, pagos);
+
+  const base = generarTablaAmortizacion(
+    parseFloat(credito.monto_solicitado),
+    parseFloat(credito.tasa_interes),
+    credito.plazo_meses,
+    credito.fecha_desembolso
+  );
+  
+
+  return res.json({
+    credito: {
+      id:               credito.id,
+      socio:            credito.socios,
+      monto_solicitado: parseFloat(credito.monto_solicitado),
+      tasa_interes:     parseFloat(credito.tasa_interes),
+      plazo_meses:      credito.plazo_meses,
+      monto_total:      base.monto_total,
+      interes_total:    base.interes_total,
+      estado:           credito.estado,
+      saldo_pendiente:  parseFloat(credito.saldo_pendiente),
+      fecha_desembolso: credito.fecha_desembolso,
+    },
+    tabla: filas,
+    resumen: {
+		capital_pagado:    +filas.reduce((s, f) => s + f.capital_pagado, 0).toFixed(2),
+		interes_pagado:    +filas.reduce((s, f) => s + f.interes_pagado, 0).toFixed(2),
+		interes_condonado: interesCondonadoTotal,
+		cuotas_pagadas:    filas.filter(f => f.pagada).length,
+		cuotas_vencidas:   filas.filter(f => f.vencida).length,
+		cuotas_totales:    credito.plazo_meses,
+		total_abonos:      totalAbonos,
+    },
+  });
+});
+
+module.exports = router

@@ -32,7 +32,7 @@ domus_v2/
 ## Requisitos
 
 - Node.js v18 o superior
-- Una cuenta de Supabase con la base de datos creada (ver `backend/schema.sql`)
+- Una cuenta de Supabase con la base de datos creada
 
 ---
 

@@ -22,7 +22,7 @@ import type {
   DistribucionResponse,
   EstadoCajaResponse,
 } from "../api/reportes.types";
-import { apiClient } from "../api/api.client";
+// import { apiClient } from "../api/api.client";
 
 function fm(m: number) {
   return new Intl.NumberFormat("es-EC", {

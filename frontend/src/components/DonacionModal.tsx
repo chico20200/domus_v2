@@ -22,7 +22,7 @@ export function DonacionModal({ onCerrar }: DonacionModalProps) {
   const [paso,      setPaso]      = useState<"monto" | "pago">("monto")
   const [mensaje,   setMensaje]   = useState<string | undefined>(undefined)
   const [error,     setError]     = useState<string | undefined>(undefined)
-  const [sdkListo, setSdkListo] = useState(false)
+  // const [sdkListo, setSdkListo] = useState(false)
   const paypalRef = useRef<HTMLDivElement>(null)
 
   

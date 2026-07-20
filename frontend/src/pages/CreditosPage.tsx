@@ -3,7 +3,7 @@ import { useState, useEffect }  from "react"
 import { useNavigate }          from "react-router-dom"
 import {
   CreditCard, ChevronRight, ChevronLeft, Plus,
-  CheckCircle, Clock, Coins, Wallet
+  CheckCircle, Coins, Wallet
 } from "lucide-react"
 import { AppLayout }            from "../components/layout/AppLayout"
 import { Button }               from "../components/Button"

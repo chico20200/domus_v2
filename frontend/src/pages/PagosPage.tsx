@@ -2,7 +2,7 @@
 import { useState, useEffect }  from "react"
 import { useNavigate }          from "react-router-dom"
 import {
-  Receipt, Wallet, Coins, Search, CheckCircle
+   Wallet, Coins, Search, CheckCircle
 } from "lucide-react"
 import { AppLayout }            from "../components/layout/AppLayout"
 import { Button }               from "../components/Button"
